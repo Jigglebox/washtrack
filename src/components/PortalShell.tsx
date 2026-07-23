@@ -14,7 +14,7 @@ export const PortalShell = ({ title, children }: Props) => {
   const { unreadCount } = usePortalUnreadCount();
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card sticky top-0 z-40">
+      <header className="border-b bg-card sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
         <div className="flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 py-2 lg:px-8">
           <Link to="/portal/dashboard" className="flex items-center gap-2 min-w-0 shrink">
             <div className="h-9 w-9 shrink-0 rounded-lg bg-gradient-to-br from-[#1e3a5f] to-[#2d8cc4] flex items-center justify-center text-white text-sm shadow-md transition-transform hover:scale-110">

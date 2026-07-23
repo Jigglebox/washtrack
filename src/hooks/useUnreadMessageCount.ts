@@ -65,7 +65,7 @@ export function useUnreadMessageCount() {
 
     // Subscribe to new messages in real-time
     const channel = supabase
-      .channel('employee-comments-changes')
+      .channel(`employee-comments-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

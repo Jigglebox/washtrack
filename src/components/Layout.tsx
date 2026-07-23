@@ -42,6 +42,10 @@ import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { ErrorReportButton } from '@/components/ErrorReportButton';
 import { usePayrollMode } from '@/hooks/usePayrollMode';
 import { ModeSwitcher } from '@/components/ModeSwitcher';
+// [mobile-port] Only these routes exist on the native build (see MobileRoutes.tsx).
+import { IS_MOBILE } from '@/lib/appTarget';
+
+const MOBILE_ALLOWED_PATHS = new Set(['/employee/dashboard', '/messages']);
 import {
   Dialog,
   DialogContent,
@@ -183,8 +187,11 @@ export const Layout = ({ children }: LayoutProps) => {
     return navItems;
   };
 
-  const navItems = getNavItems();
-  
+  // On the native mobile build, only show menu items whose routes actually exist there.
+  const navItems = IS_MOBILE
+    ? getNavItems().filter((item) => MOBILE_ALLOWED_PATHS.has(item.path))
+    : getNavItems();
+
   // Group nav items by section
   const groupedNavItems = navItems.reduce((acc, item) => {
     const section = item.section || 'Other';
@@ -205,7 +212,7 @@ export const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Top Navigation */}
-      <header className="border-b bg-card sticky top-0 z-50">
+      <header className="border-b bg-card sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
         <div className="flex h-16 items-center justify-between px-4 lg:px-8">
           <div className="flex items-center gap-4">
             <Button
@@ -279,7 +286,7 @@ export const Layout = ({ children }: LayoutProps) => {
         {/* Side Navigation */}
         <aside className={`
           ${sidebarOpen ? 'block' : 'hidden'}
-          fixed lg:sticky top-16 left-0 z-40 h-[calc(100vh-4rem)] w-64 
+          fixed lg:sticky top-[calc(4rem+env(safe-area-inset-top))] left-0 z-40 h-[calc(100vh-4rem-env(safe-area-inset-top))] w-64
           border-r bg-card
         `}>
           <nav className="h-full p-4 overflow-y-auto">
@@ -322,7 +329,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 </div>
               ))}
 
-              {!isInstalled && (
+              {!isInstalled && !IS_MOBILE && (
                 <div className="border-t pt-4 mt-2">
                   <Button
                     variant="outline"

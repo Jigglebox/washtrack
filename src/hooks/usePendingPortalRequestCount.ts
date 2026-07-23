@@ -42,7 +42,7 @@ export function usePendingPortalRequestCount() {
     fetchPendingCount();
 
     const accessChannel = supabase
-      .channel('portal-access-requests-pending')
+      .channel(`portal-access-requests-pending-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
@@ -56,7 +56,7 @@ export function usePendingPortalRequestCount() {
       .subscribe();
 
     const userChannel = supabase
-      .channel('portal-users-pending')
+      .channel(`portal-users-pending-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

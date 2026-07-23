@@ -6,6 +6,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RootRedirect } from "@/components/RootRedirect";
+// [mobile-port] On the native build, render the employee-only route tree instead.
+import { IS_MOBILE } from "@/lib/appTarget";
+import { MobileRoutes } from "@/MobileRoutes";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 
 // Pages
 import Login from "./pages/Login";
@@ -55,6 +59,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <AppErrorBoundary>
+          {IS_MOBILE ? (
+            <MobileRoutes />
+          ) : (
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
@@ -278,6 +286,8 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          )}
+          </AppErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

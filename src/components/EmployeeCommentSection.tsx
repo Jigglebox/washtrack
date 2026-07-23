@@ -58,7 +58,7 @@ export function EmployeeCommentSection({
     const commentIds = comments.map(c => c.id);
     
     const channel = supabase
-      .channel('employee-replies')
+      .channel(`employee-replies-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
