@@ -12,9 +12,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WorkItemWithDetails } from '@/components/WorkItemGrid';
+// [mobile-port] Capture job-site location when logging work (native app only).
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { IS_MOBILE } from '@/lib/appTarget';
+import { checkJobSiteProximity, JOB_SITE_RADIUS_MILES, type LatLng } from '@/lib/geofence';
 
 export interface RateConfigWithDetails {
   id: string;
@@ -33,15 +37,19 @@ interface LogWorkModalProps {
   workItem?: WorkItemWithDetails;
   rateConfig?: RateConfigWithDetails;
   onSuccess: () => void;
+  /** Facility coordinates, if known. When present, logging is gated to within JOB_SITE_RADIUS_MILES.
+   *  Currently the locations table has no coordinates, so callers pass nothing and the gate is skipped. */
+  facilityCoords?: LatLng | null;
 }
 
-export function LogWorkModal({ open, onOpenChange, workItem, rateConfig, onSuccess }: LogWorkModalProps) {
+export function LogWorkModal({ open, onOpenChange, workItem, rateConfig, onSuccess, facilityCoords }: LogWorkModalProps) {
   const { user } = useAuth();
   const [date, setDate] = useState<Date>(new Date());
   const [quantity, setQuantity] = useState('1');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [cutoffDate, setCutoffDate] = useState<Date | null>(null);
+  const { coords, loading: geoLoading, error: geoError, getCurrentPosition } = useGeolocation();
 
   const isHourly = rateConfig !== undefined;
   const config = workItem?.rate_config || rateConfig;
@@ -57,6 +65,10 @@ export function LogWorkModal({ open, onOpenChange, workItem, rateConfig, onSucce
       setDate(new Date());
       setQuantity('1');
       setNotes('');
+      // On the native app, capture the employee's location to record the job site.
+      if (IS_MOBILE) {
+        getCurrentPosition();
+      }
     }
   }, [open, isHourly]);
 
@@ -69,15 +81,30 @@ export function LogWorkModal({ open, onOpenChange, workItem, rateConfig, onSucce
       return;
     }
 
+    // Job-site proximity gate (native app). Skipped automatically until facilities have coordinates.
+    const proximity = checkJobSiteProximity(coords, facilityCoords);
+    if (!proximity.skipped && !proximity.withinRange) {
+      toast.error(
+        `You're about ${Math.round(proximity.distanceMiles!)} mi from this facility — you must be within ${JOB_SITE_RADIUS_MILES} mi to log work here.`,
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
+      // Fold the captured job-site location into the notes (native app only).
+      const locationTag = coords
+        ? `📍 ${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)} (±${Math.round(coords.accuracy)}m)`
+        : '';
+      const finalNotes = [notes.trim(), locationTag].filter(Boolean).join('\n') || null;
+
       const insertData = {
         work_item_id: workItem?.id || null,
         rate_config_id: workItem ? null : rateConfig?.id || null,
         employee_id: user.id,
         work_date: format(date, 'yyyy-MM-dd'),
         quantity: qty,
-        notes: notes.trim() || null,
+        notes: finalNotes,
       };
 
       const { error } = await supabase.from('work_logs').insert(insertData);
@@ -175,6 +202,39 @@ export function LogWorkModal({ open, onOpenChange, workItem, rateConfig, onSucce
               rows={2}
             />
           </div>
+
+          {/* Job-site location — native app only */}
+          {IS_MOBILE && (
+            <div className="space-y-1">
+              <Label>Job-site location</Label>
+              <div className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {geoLoading ? (
+                  <span className="text-muted-foreground">Getting your location…</span>
+                ) : coords ? (
+                  <span>
+                    {coords.latitude.toFixed(5)}, {coords.longitude.toFixed(5)}{' '}
+                    <span className="text-muted-foreground">(±{Math.round(coords.accuracy)}m)</span>
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">{geoError || 'Not captured'}</span>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto h-7"
+                  onClick={() => getCurrentPosition()}
+                  disabled={geoLoading}
+                >
+                  {coords ? 'Update' : 'Capture'}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Recorded with your entry to confirm you were on site.
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
