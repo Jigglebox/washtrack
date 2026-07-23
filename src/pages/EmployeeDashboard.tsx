@@ -6,6 +6,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { CutoffBanner } from '@/components/CutoffBanner';
 import { WorkItemGrid, WorkItemWithDetails } from '@/components/WorkItemGrid';
 import { LogWorkModal, RateConfigWithDetails } from '@/components/LogWorkModal';
+// [mobile-port] Job-site geofence when logging work (native app only).
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { IS_MOBILE } from '@/lib/appTarget';
+import { checkJobSiteProximity, JOB_SITE_RADIUS_MILES } from '@/lib/geofence';
 import { CarsWashedWheelCard } from '@/components/CarsWashedWheelCard';
 import { GuidedDemo } from '@/components/GuidedDemo';
 import { AddVehicleModal } from '@/components/AddVehicleModal';
@@ -40,6 +44,8 @@ import {
 interface Location {
   id: string;
   name: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface WorkLogWithDetails {
@@ -85,6 +91,7 @@ export default function EmployeeDashboard() {
   const navigate = useNavigate();
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<string>('');
+  const { getCurrentPosition } = useGeolocation();
   const [hourlyConfigs, setHourlyConfigs] = useState<RateConfigWithDetails[]>([]);
   const [recentLogs, setRecentLogs] = useState<WorkLogWithDetails[]>([]);
   const [loadingLocations, setLoadingLocations] = useState(true);
@@ -188,7 +195,7 @@ export default function EmployeeDashboard() {
 
       const { data, error } = await supabase
         .from('locations')
-        .select('id, name')
+        .select('id, name, latitude, longitude')
         .in('id', userLocations)
         .eq('is_active', true)
         .order('name');
@@ -444,13 +451,40 @@ export default function EmployeeDashboard() {
   // Get selected IDs for WorkItemGrid
   const selectedWorkItemIds = new Set(pendingEntries.keys());
 
+  // [mobile-port] Coordinates of the selected facility (null until locations have coords).
+  const selectedFacility = locations.find((l) => l.id === selectedLocationId);
+  const facilityCoords =
+    selectedFacility && selectedFacility.latitude != null && selectedFacility.longitude != null
+      ? { latitude: selectedFacility.latitude, longitude: selectedFacility.longitude }
+      : null;
+
   // Batch submit handler
   const handleBatchSubmit = async () => {
     if (!user || (pendingEntries.size === 0 && !carsWashedDirty)) return;
     
     setIsSubmitting(true);
     try {
-      const noteText = workNote.trim() || null;
+      // [mobile-port] Native only: capture the employee's location, and if the facility has coordinates,
+      // block logging when they're outside the allowed radius. Falls through (allows) when we can't
+      // determine location or the facility has no coordinates.
+      let locationTag = '';
+      if (IS_MOBILE) {
+        const pos = await getCurrentPosition();
+        if (pos) {
+          locationTag = `📍 ${pos.latitude.toFixed(6)}, ${pos.longitude.toFixed(6)} (±${Math.round(pos.accuracy)}m)`;
+        }
+        if (facilityCoords) {
+          const proximity = checkJobSiteProximity(pos, facilityCoords);
+          if (!proximity.skipped && !proximity.withinRange) {
+            toast.error(
+              `You're about ${Math.round(proximity.distanceMiles!)} mi from ${selectedFacility?.name ?? 'this facility'} — you must be within ${JOB_SITE_RADIUS_MILES} mi to log work here.`,
+            );
+            return;
+          }
+        }
+      }
+
+      const noteText = [workNote.trim(), locationTag].filter(Boolean).join('\n') || null;
       const workDateStr = format(selectedDate, 'yyyy-MM-dd');
       
       const entries = Array.from(pendingEntries.values()).map(entry => ({
@@ -1171,6 +1205,7 @@ export default function EmployeeDashboard() {
         workItem={undefined}
         rateConfig={selectedRateConfig || undefined}
         onSuccess={handleLogSuccess}
+        facilityCoords={facilityCoords}
       />
 
       {/* Floating Message Button */}
