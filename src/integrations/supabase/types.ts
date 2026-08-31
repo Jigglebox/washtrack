@@ -994,6 +994,154 @@ export type Database = {
           },
         ]
       }
+      ticket_line_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          position: number
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          position: number
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          position?: number
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_line_items_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_replies: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_replies_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_views: {
+        Row: {
+          created_at: string
+          id: string
+          last_viewed_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_viewed_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_viewed_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tickets: {
+        Row: {
+          address: string | null
+          client_id: string | null
+          comments: string | null
+          created_at: string
+          employee_id: string | null
+          id: string
+          location_id: string | null
+          photo_url: string | null
+          status: string
+          submitted_by: string
+          ticket_number: string
+          updated_at: string
+          work_date: string | null
+        }
+        Insert: {
+          address?: string | null
+          client_id?: string | null
+          comments?: string | null
+          created_at?: string
+          employee_id?: string | null
+          id?: string
+          location_id?: string | null
+          photo_url?: string | null
+          status?: string
+          submitted_by: string
+          ticket_number?: string
+          updated_at?: string
+          work_date?: string | null
+        }
+        Update: {
+          address?: string | null
+          client_id?: string | null
+          comments?: string | null
+          created_at?: string
+          employee_id?: string | null
+          id?: string
+          location_id?: string | null
+          photo_url?: string | null
+          status?: string
+          submitted_by?: string
+          ticket_number?: string
+          updated_at?: string
+          work_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_locations: {
         Row: {
           created_at: string

@@ -37,6 +37,7 @@ import { hasRoleOrHigher } from '@/lib/roleUtils';
 import esAndDLogo from '@/assets/es-d-logo.png';
 import { UserRole } from '@/types/database';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
+import { useUnreadTicketCount } from '@/hooks/useUnreadTicketCount';
 import { usePendingPortalRequestCount } from '@/hooks/usePendingPortalRequestCount';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { ErrorReportButton } from '@/components/ErrorReportButton';
@@ -63,6 +64,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const [showIOSDialog, setShowIOSDialog] = useState(false);
   const [showAndroidDialog, setShowAndroidDialog] = useState(false);
   const { unreadCount } = useUnreadMessageCount();
+  const { unreadTicketCount } = useUnreadTicketCount();
   const { pendingCount } = usePendingPortalRequestCount();
   const { canInstall, isIOS, isAndroid, isMobile, isInstalled, promptInstall, androidBrowser } = usePWAInstall();
   const [showUnsupportedDialog, setShowUnsupportedDialog] = useState(false);
@@ -76,7 +78,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const getNavItems = () => {
     if (!userProfile || !userRole) return [];
 
-    const navItems: Array<{ label: string; icon: any; path: string; section?: string; badge?: number }> = [];
+    const navItems: Array<{ label: string; icon: any; path: string; section?: string; badge?: number; badgeClassName?: string; ticketBadge?: number }> = [];
 
     // Payroll mode has its own dedicated nav.
     if (isPayrollMode) {
@@ -97,26 +99,27 @@ export const Layout = ({ children }: LayoutProps) => {
         section: 'Dashboards'
       });
       
-      // Single Messages link - dynamic label and badge based on role
+      // Keep regular messages and ticket notifications distinct in the same nav item.
       const isOfficeStaff = hasRoleOrHigher(userRole, 'finance' as UserRole);
       navItems.push({ 
         label: isOfficeStaff ? 'Messages' : 'My Messages', 
         icon: MessageSquare, 
         path: '/messages',
         section: 'Dashboards',
-        badge: isOfficeStaff && unreadCount > 0 ? unreadCount : undefined
+        badge: isOfficeStaff && unreadCount > 0 ? unreadCount : undefined,
+        badgeClassName: 'bg-destructive text-destructive-foreground',
+        ticketBadge: isOfficeStaff && unreadTicketCount > 0 ? unreadTicketCount : undefined
       });
-    }
 
-    // Manager Dashboard temporarily hidden - uncomment when ready
-    // if (hasRoleOrHigher(userRole, 'manager' as UserRole)) {
-    //   navItems.push({ 
-    //     label: 'Manager Dashboard', 
-    //     icon: Briefcase, 
-    //     path: '/manager/dashboard',
-    //     section: 'Dashboards'
-    //   });
-    // }
+      if (hasRoleOrHigher(userRole, 'manager' as UserRole)) {
+        navItems.push({
+          label: 'Manager Dashboard',
+          icon: Briefcase,
+          path: '/manager/dashboard',
+          section: 'Dashboards'
+        });
+      }
+    }
 
     if (hasRoleOrHigher(userRole, 'finance' as UserRole)) {
       navItems.push({ 
@@ -308,13 +311,19 @@ export const Layout = ({ children }: LayoutProps) => {
                       >
                         <item.icon className="h-4 w-4" />
                         {item.label}
-                        {item.badge && (
-                          <Badge 
-                            variant="destructive" 
-                            className="ml-auto h-5 min-w-5 flex items-center justify-center text-xs px-1.5"
-                          >
-                            {item.badge > 99 ? '99+' : item.badge}
-                          </Badge>
+                        {(item.badge || item.ticketBadge) && (
+                          <span className="ml-auto flex items-center gap-1">
+                            {item.badge && (
+                              <Badge variant="outline" className={`h-5 min-w-5 flex items-center justify-center text-xs px-1.5 border-0 ${item.badgeClassName || 'bg-destructive text-destructive-foreground'}`}>
+                                {item.badge > 99 ? '99+' : item.badge}
+                              </Badge>
+                            )}
+                            {item.ticketBadge && (
+                              <Badge variant="outline" className="h-5 min-w-5 flex items-center justify-center text-xs px-1.5 border-0 bg-primary text-primary-foreground">
+                                {item.ticketBadge > 99 ? '99+' : item.ticketBadge}
+                              </Badge>
+                            )}
+                          </span>
                         )}
                       </Link>
                     );

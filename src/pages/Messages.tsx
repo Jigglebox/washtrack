@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,8 +21,10 @@ import {
   Calendar, Search, RefreshCw, Eye, Reply, Send, ArrowLeft, UserPlus, User, X, FileText, ImageIcon, CalendarDays, CalendarRange
 } from 'lucide-react';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
+import { useUnreadTicketCount } from '@/hooks/useUnreadTicketCount';
 import { UserSearchInput } from '@/components/UserSearchInput';
 import { MyErrorReports } from '@/components/MyErrorReports';
+import { TicketList } from '@/components/tickets/TicketList';
 
 
 interface EmployeeComment {
@@ -83,6 +85,7 @@ interface Location {
 export default function Messages() {
   const { user, userRole, userLocations } = useAuth();
   const navigate = useNavigate();
+  const routeLocation = useLocation();
   
   // Role-based feature flags
   const isOfficeStaff = userRole && hasRoleOrHigher(userRole, 'finance' as UserRole);
@@ -118,6 +121,10 @@ export default function Messages() {
   const [showComposeDialog, setShowComposeDialog] = useState(false);
   
   const { markAsRead } = useUnreadMessageCount();
+  const { markTicketsAsRead } = useUnreadTicketCount();
+  const [activeSection, setActiveSection] = useState<'messages' | 'tickets'>(() =>
+    routeLocation.search.includes('section=tickets') ? 'tickets' : 'messages'
+  );
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekStartStr = format(weekStart, 'yyyy-MM-dd');
@@ -128,6 +135,14 @@ export default function Messages() {
       markAsRead();
     }
   }, [isOfficeStaff]);
+
+  useEffect(() => {
+    if (isOfficeStaff && activeSection === 'tickets') {
+      markTicketsAsRead();
+    }
+    // Ticket views are marked when the dedicated section is opened.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOfficeStaff, activeSection]);
 
   // Fetch locations
   useEffect(() => {
@@ -489,8 +504,43 @@ export default function Messages() {
           </div>
         </div>
 
-        {/* Filters Card */}
-        <Card>
+         {isOfficeStaff && (
+           <div className="flex items-center gap-1 border rounded-md p-1 w-fit">
+             <Button
+               variant={activeSection === 'messages' ? 'default' : 'ghost'}
+               size="sm"
+               onClick={() => setActiveSection('messages')}
+               className="h-8 gap-1.5"
+             >
+               <MessageSquare className="h-3.5 w-3.5" /> Messages
+             </Button>
+             <Button
+               variant={activeSection === 'tickets' ? 'default' : 'ghost'}
+               size="sm"
+               onClick={() => setActiveSection('tickets')}
+               className="h-8 gap-1.5"
+             >
+               <FileText className="h-3.5 w-3.5" /> Tickets
+             </Button>
+           </div>
+         )}
+
+         {activeSection === 'tickets' && isOfficeStaff ? (
+           <Card>
+             <CardHeader className="pb-3">
+               <CardTitle className="text-lg flex items-center gap-2">
+                 <FileText className="h-5 w-5 text-primary" /> Tickets
+               </CardTitle>
+               <CardDescription>Manager-submitted tickets requiring office attention</CardDescription>
+             </CardHeader>
+             <CardContent>
+               <TicketList canSeeAll onViewed={() => { void markTicketsAsRead(); }} />
+             </CardContent>
+           </Card>
+         ) : (
+           <>
+         {/* Filters Card */}
+         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
               {/* View mode toggle */}
@@ -983,9 +1033,11 @@ export default function Messages() {
                 })}
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+           </CardContent>
+         </Card>
+           </>
+         )}
+       </div>
     </Layout>
   );
 }
