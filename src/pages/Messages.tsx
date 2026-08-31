@@ -85,6 +85,7 @@ interface Location {
 export default function Messages() {
   const { user, userRole, userLocations } = useAuth();
   const navigate = useNavigate();
+  const routeLocation = useLocation();
   
   // Role-based feature flags
   const isOfficeStaff = userRole && hasRoleOrHigher(userRole, 'finance' as UserRole);
@@ -120,6 +121,10 @@ export default function Messages() {
   const [showComposeDialog, setShowComposeDialog] = useState(false);
   
   const { markAsRead } = useUnreadMessageCount();
+  const { markTicketsAsRead } = useUnreadTicketCount();
+  const [activeSection, setActiveSection] = useState<'messages' | 'tickets'>(() =>
+    routeLocation.search.includes('section=tickets') ? 'tickets' : 'messages'
+  );
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekStartStr = format(weekStart, 'yyyy-MM-dd');
@@ -130,6 +135,14 @@ export default function Messages() {
       markAsRead();
     }
   }, [isOfficeStaff]);
+
+  useEffect(() => {
+    if (isOfficeStaff && activeSection === 'tickets') {
+      markTicketsAsRead();
+    }
+    // Ticket views are marked when the dedicated section is opened.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOfficeStaff, activeSection]);
 
   // Fetch locations
   useEffect(() => {
