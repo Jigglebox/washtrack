@@ -64,6 +64,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const [showIOSDialog, setShowIOSDialog] = useState(false);
   const [showAndroidDialog, setShowAndroidDialog] = useState(false);
   const { unreadCount } = useUnreadMessageCount();
+  const { unreadTicketCount } = useUnreadTicketCount();
   const { pendingCount } = usePendingPortalRequestCount();
   const { canInstall, isIOS, isAndroid, isMobile, isInstalled, promptInstall, androidBrowser } = usePWAInstall();
   const [showUnsupportedDialog, setShowUnsupportedDialog] = useState(false);
@@ -77,7 +78,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const getNavItems = () => {
     if (!userProfile || !userRole) return [];
 
-    const navItems: Array<{ label: string; icon: any; path: string; section?: string; badge?: number }> = [];
+    const navItems: Array<{ label: string; icon: any; path: string; section?: string; badge?: number; badgeClassName?: string }> = [];
 
     // Payroll mode has its own dedicated nav.
     if (isPayrollMode) {
