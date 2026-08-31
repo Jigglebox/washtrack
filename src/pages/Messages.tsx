@@ -21,8 +21,10 @@ import {
   Calendar, Search, RefreshCw, Eye, Reply, Send, ArrowLeft, UserPlus, User, X, FileText, ImageIcon, CalendarDays, CalendarRange
 } from 'lucide-react';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
+import { useUnreadTicketCount } from '@/hooks/useUnreadTicketCount';
 import { UserSearchInput } from '@/components/UserSearchInput';
 import { MyErrorReports } from '@/components/MyErrorReports';
+import { TicketList } from '@/components/tickets/TicketList';
 
 
 interface EmployeeComment {

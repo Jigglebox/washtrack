@@ -110,17 +110,16 @@ export const Layout = ({ children }: LayoutProps) => {
         badgeClassName: 'bg-destructive text-destructive-foreground',
         ticketBadge: isOfficeStaff && unreadTicketCount > 0 ? unreadTicketCount : undefined
       });
-    }
 
-    // Manager Dashboard temporarily hidden - uncomment when ready
-    // if (hasRoleOrHigher(userRole, 'manager' as UserRole)) {
-    //   navItems.push({ 
-    //     label: 'Manager Dashboard', 
-    //     icon: Briefcase, 
-    //     path: '/manager/dashboard',
-    //     section: 'Dashboards'
-    //   });
-    // }
+      if (hasRoleOrHigher(userRole, 'manager' as UserRole)) {
+        navItems.push({
+          label: 'Manager Dashboard',
+          icon: Briefcase,
+          path: '/manager/dashboard',
+          section: 'Dashboards'
+        });
+      }
+    }
 
     if (hasRoleOrHigher(userRole, 'finance' as UserRole)) {
       navItems.push({ 
