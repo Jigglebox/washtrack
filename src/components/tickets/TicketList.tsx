@@ -84,17 +84,17 @@ export function TicketList({ canSeeAll, ownOnly = false, refreshKey = 0, onViewe
       (items || []).forEach(item => { (groupedItems[item.ticket_id] ||= []).push(item); });
       setLineItems(groupedItems);
       const rawReplies = replyRows || [];
-      const userIds = [...new Set(rawReplies.map(reply => reply.user_id))];
-      const groupedReplies: Record<string, Reply[]> = {};
-      if (userIds.length) {
-        const { data: userRows } = await supabase.rpc('get_user_display_info', { user_ids: userIds });
-        const nextNames = { ...names };
-        (userRows || []).forEach((u: { id: string; name: string }) => { nextNames[u.id] = u.name; });
-        setNames(nextNames);
-      }
-      rawReplies.forEach(reply => {
-        (groupedReplies[reply.ticket_id] ||= []).push({ ...reply, user_name: names[reply.user_id] || 'Office Team' });
-      });
+       const userIds = [...new Set(rawReplies.map(reply => reply.user_id))];
+       const groupedReplies: Record<string, Reply[]> = {};
+       let nextNames = { ...names };
+       if (userIds.length) {
+         const { data: userRows } = await supabase.rpc('get_user_display_info', { user_ids: userIds });
+         (userRows || []).forEach((u: { id: string; name: string }) => { nextNames[u.id] = u.name; });
+         setNames(nextNames);
+       }
+       rawReplies.forEach(reply => {
+         (groupedReplies[reply.ticket_id] ||= []).push({ ...reply, user_name: nextNames[reply.user_id] || 'Office Team' });
+       });
       setReplies(groupedReplies);
 
       const photoEntries = await Promise.all(list.filter(t => t.photo_url).map(async t => {
