@@ -324,8 +324,8 @@ export const Layout = ({ children }: LayoutProps) => {
                         {item.label}
                         {item.badge && (
                           <Badge 
-                            variant="destructive" 
-                            className="ml-auto h-5 min-w-5 flex items-center justify-center text-xs px-1.5"
+                            variant="outline"
+                            className={`ml-auto h-5 min-w-5 flex items-center justify-center text-xs px-1.5 border-0 ${item.badgeClassName || 'bg-destructive text-destructive-foreground'}`}
                           >
                             {item.badge > 99 ? '99+' : item.badge}
                           </Badge>
