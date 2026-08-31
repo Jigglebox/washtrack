@@ -504,8 +504,43 @@ export default function Messages() {
           </div>
         </div>
 
-        {/* Filters Card */}
-        <Card>
+         {isOfficeStaff && (
+           <div className="flex items-center gap-1 border rounded-md p-1 w-fit">
+             <Button
+               variant={activeSection === 'messages' ? 'default' : 'ghost'}
+               size="sm"
+               onClick={() => setActiveSection('messages')}
+               className="h-8 gap-1.5"
+             >
+               <MessageSquare className="h-3.5 w-3.5" /> Messages
+             </Button>
+             <Button
+               variant={activeSection === 'tickets' ? 'default' : 'ghost'}
+               size="sm"
+               onClick={() => setActiveSection('tickets')}
+               className="h-8 gap-1.5"
+             >
+               <FileText className="h-3.5 w-3.5" /> Tickets
+             </Button>
+           </div>
+         )}
+
+         {activeSection === 'tickets' && isOfficeStaff ? (
+           <Card>
+             <CardHeader className="pb-3">
+               <CardTitle className="text-lg flex items-center gap-2">
+                 <FileText className="h-5 w-5 text-primary" /> Tickets
+               </CardTitle>
+               <CardDescription>Manager-submitted tickets requiring office attention</CardDescription>
+             </CardHeader>
+             <CardContent>
+               <TicketList canSeeAll onViewed={() => { void markTicketsAsRead(); }} />
+             </CardContent>
+           </Card>
+         ) : (
+           <>
+         {/* Filters Card */}
+         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
               {/* View mode toggle */}
@@ -998,9 +1033,11 @@ export default function Messages() {
                 })}
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+           </CardContent>
+         </Card>
+           </>
+         )}
+       </div>
     </Layout>
   );
 }
