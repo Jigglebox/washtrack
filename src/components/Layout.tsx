@@ -24,6 +24,7 @@ import {
   UserCircle,
   Building2,
   MessageSquare,
+  FileText,
   Wrench,
   Package,
   Calendar,
