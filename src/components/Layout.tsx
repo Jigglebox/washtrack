@@ -99,15 +99,26 @@ export const Layout = ({ children }: LayoutProps) => {
         section: 'Dashboards'
       });
       
-      // Single Messages link - dynamic label and badge based on role
+      // Single Messages link - dynamic badges keep tickets blue and messages red.
       const isOfficeStaff = hasRoleOrHigher(userRole, 'finance' as UserRole);
       navItems.push({ 
         label: isOfficeStaff ? 'Messages' : 'My Messages', 
         icon: MessageSquare, 
         path: '/messages',
         section: 'Dashboards',
-        badge: isOfficeStaff && unreadCount > 0 ? unreadCount : undefined
+        badge: isOfficeStaff && unreadCount > 0 ? unreadCount : undefined,
+        badgeClassName: 'bg-destructive text-destructive-foreground'
       });
+      if (isOfficeStaff && unreadTicketCount > 0) {
+        navItems.push({
+          label: 'Tickets',
+          icon: FileText,
+          path: '/messages?section=tickets',
+          section: 'Dashboards',
+          badge: unreadTicketCount,
+          badgeClassName: 'bg-blue-600 text-white'
+        });
+      }
     }
 
     // Manager Dashboard temporarily hidden - uncomment when ready
