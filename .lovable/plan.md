@@ -13,7 +13,7 @@ Goal: produce a weekly payroll run for ES&D that pays washers per unit (from wor
 1. **Employee pay rates per unit.** The `users` table has `pay_rate` / `pay_type` columns but every row is empty, and a single rate per employee is not enough anyway: pay per PUD differs from pay per trailer. We need a pay-rate table keyed by employee + work type (+ optional location), with an effective date so raises don't rewrite history.
 2. **Hourly time.** Nothing in the app captures clock hours. These arrive as a weekly CSV/Excel upload from an outside timekeeping system, so we need an import target table (employee, date or week, hours, optional department/task) plus the upload screen and column mapping.
 3. **Pay periods.** A record per weekly period (Mon–Sun) with status draft / locked / paid, so a run can be frozen and re-opened.
-4. **Payroll run lines.** The computed result: one line per employee × pay code (unit type or hourly) × department, with quantity, rate, and amount. Stored so a locked week is reproducible even if rates later change.
+4. **Payroll run lines.** The computed result. Each employee will normally have several lines in a week — one per pay code (each unit type they washed, plus hourly) and per department/location — each with its own quantity, rate, and amount, rolling up to an employee weekly total. Stored so a locked week is reproducible even if rates later change.
 5. **The exact Excel template.** This is the piece I cannot infer. I need your current Future Systems payroll workbook (a real filled-out week is best) so I can match sheet name, header rows, column order, blank spacer rows/columns, number formats, and employee identifier used by Future Systems (their employee code, not our `employee_id`, if they differ).
 
 ## Build sequence
