@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDays, format, startOfWeek } from 'date-fns';
 import { CalendarRange, Download, Loader2, Plus, RefreshCw, Upload, Wallet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { buildPayrollWorkbook, downloadPayrollWorkbook, PayrollExportLine } from '@/lib/payrollExport';
 
 type PayCode = { id: string; code: string; department: string; default_pay_type: string };
-type Employee = { id: string; name: string; employee_id: string };
+type Employee = { id: string; name: string; employee_id: string | null };
 type PayLine = {
   id: string;
   employee_id: string | null;
@@ -36,6 +37,25 @@ const payTypeOptions = ['Unit', 'Hourly', 'Salary'];
 const asDateInput = (date: Date) => format(date, 'yyyy-MM-dd');
 const mondayOf = (date: Date) => startOfWeek(date, { weekStartsOn: 1 });
 const emptyLine = { employee_id: '', pay_code_id: '', department: '', task_label: '', provider_employee_number: '', rate: '0', pay_type: 'Unit', effective_date: asDateInput(new Date()) };
+const emptyPayCode = { code: '', department: '', default_pay_type: 'Unit', description: '' };
+
+const parseHoursFile = async (file: File) => {
+  const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, { defval: '' });
+  const value = (row: Record<string, unknown>, names: string[]) => {
+    const key = Object.keys(row).find(candidate => names.includes(candidate.trim().toLowerCase()));
+    return key ? String(row[key] ?? '').trim() : '';
+  };
+  return rows.map(row => ({
+    raw_name: value(row, ['name', 'employee', 'employee name', 'employee_name']),
+    provider_employee_number: value(row, ['employee number', 'employee #', 'employee id', 'employee number/id', 'id']),
+    department: value(row, ['department', 'dept']),
+    task_label: value(row, ['task', 'task label', 'job', 'location']),
+    hours: Number(value(row, ['hours', 'regular hours', 'hrs', 'regular hrs'])) || 0,
+    ot_hours: Number(value(row, ['ot hours', 'overtime hours', 'ot', 'e02 ot hours'])) || 0,
+  })).filter(row => row.raw_name || row.provider_employee_number);
+};
 
 const PayrollDashboard = () => {
   const [activeTab, setActiveTab] = useState<'run' | 'lines' | 'hours'>('run');
@@ -50,6 +70,8 @@ const PayrollDashboard = () => {
   const [working, setWorking] = useState(false);
   const [showPayLineForm, setShowPayLineForm] = useState(false);
   const [newLine, setNewLine] = useState(emptyLine);
+  const [newPayCode, setNewPayCode] = useState(emptyPayCode);
+  const [showPayCodeForm, setShowPayCodeForm] = useState(false);
   const [hoursFile, setHoursFile] = useState<File | null>(null);
 
   const periodEnd = useMemo(() => asDateInput(addDays(new Date(`${periodStart}T00:00:00`), 6)), [periodStart]);
@@ -59,7 +81,7 @@ const PayrollDashboard = () => {
     setLoading(true);
     const [codesResult, employeesResult, linesResult, periodsResult] = await Promise.all([
       supabase.from('payroll_pay_codes').select('id, code, department, default_pay_type').eq('is_active', true).order('code'),
-      supabase.from('users').select('id, name, employee_id').eq('is_active', true).order('name'),
+      supabase.from('users_safe_view').select('id, name, employee_id').eq('is_active', true).order('name'),
       supabase.from('payroll_employee_lines').select('*, pay_code:payroll_pay_codes(id, code, department, default_pay_type)').eq('is_active', true).order('display_name').order('sort_order'),
       supabase.from('payroll_periods').select('id, period_start, period_end, check_date, status').order('period_start', { ascending: false }).limit(20),
     ]);
@@ -103,33 +125,36 @@ const PayrollDashboard = () => {
   const generateRun = async () => {
     if (!period) { toast.error('Create or select a pay period first'); return; }
     setWorking(true);
-    const activeLines = payLines.filter(line => line.is_active && line.effective_date <= period.period_end);
-    const { data: workLogs, error: logError } = await supabase
-      .from('work_logs')
-      .select('employee_id, quantity, work_item:work_items(rate_config:rate_configs(work_type_id, location_id))')
-      .gte('work_date', period.period_start).lte('work_date', period.period_end);
-    if (logError) { setWorking(false); toast.error('Could not read weekly work logs'); return; }
-    const quantities = new Map<string, number>();
-    (workLogs || []).forEach((log: any) => {
+    const activeLines = payLines.filter(line => line.is_active && line.effective_date <= period.period_end && (!line.end_date || line.end_date >= period.period_start));
+    const [workLogsResult, mapsResult, hoursResult] = await Promise.all([
+      supabase.from('work_logs').select('employee_id, quantity, work_item:work_items(rate_config:rate_configs(work_type_id, location_id))').gte('work_date', period.period_start).lte('work_date', period.period_end),
+      supabase.from('payroll_work_type_map').select('work_type_id, location_id, pay_code_id, task_label'),
+      supabase.from('payroll_hours_imports').select('employee_id, employee_line_id, provider_employee_number, raw_name, hours, ot_hours').eq('period_id', period.id),
+    ]);
+    if (workLogsResult.error || mapsResult.error || hoursResult.error) { setWorking(false); toast.error('Could not read payroll source data'); return; }
+
+    const maps = (mapsResult.data || []) as Array<{ work_type_id: string; location_id: string | null; pay_code_id: string; task_label: string | null }>;
+    const unitTotals = new Map<string, number>();
+    (workLogsResult.data || []).forEach((log: any) => {
       const workTypeId = log.work_item?.rate_config?.work_type_id;
-      if (workTypeId) quantities.set(`${log.employee_id}|${workTypeId}`, (quantities.get(`${log.employee_id}|${workTypeId}`) || 0) + Number(log.quantity || 0));
+      const locationId = log.work_item?.rate_config?.location_id;
+      const mapping = maps.find(item => item.work_type_id === workTypeId && (!item.location_id || item.location_id === locationId));
+      if (mapping) unitTotals.set(`${log.employee_id}|${mapping.pay_code_id}`, (unitTotals.get(`${log.employee_id}|${mapping.pay_code_id}`) || 0) + Number(log.quantity || 0));
     });
-    const rows = activeLines.map(line => ({
-      period_id: period.id,
-      employee_line_id: line.id,
-      employee_id: line.employee_id,
-      notes: null,
-      code: line.pay_code?.code || '',
-      department: line.department,
-      task_label: line.task_label,
-      display_name: line.display_name,
-      provider_employee_number: line.provider_employee_number,
-      rate: line.rate,
-      quantity: line.pay_type.trim().toLowerCase() === 'salary' ? 1 : (line.pay_code ? 0 : 0),
-      ot_hours: 0,
-      pay_type: line.pay_type,
-      sort_order: line.sort_order || 0,
-    }));
+    const importedHours = (hoursResult.data || []) as Array<{ employee_id: string | null; employee_line_id: string | null; provider_employee_number: string | null; raw_name: string; hours: number; ot_hours: number }>;
+    const rows = activeLines.map(line => {
+      const hours = importedHours.filter(item => item.employee_line_id === line.id || (item.employee_id && item.employee_id === line.employee_id) || (item.provider_employee_number && item.provider_employee_number === line.provider_employee_number) || item.raw_name.trim().toLowerCase() === line.display_name.trim().toLowerCase());
+      const isHourly = line.pay_type.trim().toLowerCase() === 'hourly';
+      const isSalary = line.pay_type.trim().toLowerCase() === 'salary';
+      return {
+        period_id: period.id, employee_line_id: line.id, employee_id: line.employee_id, notes: null,
+        code: line.pay_code?.code || '', department: line.department, task_label: line.task_label,
+        display_name: line.display_name, provider_employee_number: line.provider_employee_number, rate: line.rate,
+        quantity: isHourly ? hours.reduce((sum, item) => sum + Number(item.hours || 0), 0) : isSalary ? 1 : unitTotals.get(`${line.employee_id}|${line.pay_code_id}`) || 0,
+        ot_hours: isHourly ? hours.reduce((sum, item) => sum + Number(item.ot_hours || 0), 0) : 0,
+        pay_type: line.pay_type, sort_order: line.sort_order || 0,
+      };
+    });
     const { error: deleteError } = await supabase.from('payroll_run_lines').delete().eq('period_id', period.id);
     if (deleteError) { setWorking(false); toast.error('Could not refresh payroll run'); return; }
     const { error } = rows.length ? await supabase.from('payroll_run_lines').insert(rows) : { error: null };
@@ -174,7 +199,29 @@ const PayrollDashboard = () => {
 
   const importHours = async () => {
     if (!hoursFile || !period) { toast.error('Choose a file and pay period first'); return; }
-    toast.info('Hours import screen is ready for the Future Systems column mapping; upload parsing will be connected next.');
+    setWorking(true);
+    try {
+      const parsedRows = await parseHoursFile(hoursFile);
+      if (parsedRows.length === 0) { toast.error('No employee rows were found in that file'); return; }
+      const { error } = await supabase.from('payroll_hours_imports').delete().eq('period_id', period.id);
+      if (error) throw error;
+      const { error: insertError } = await supabase.from('payroll_hours_imports').insert(parsedRows.map(row => ({ ...row, period_id: period.id, source_filename: hoursFile.name })));
+      if (insertError) throw insertError;
+      toast.success(`Imported ${parsedRows.length} hour rows`);
+      await generateRun();
+    } catch (error) {
+      console.error('Hours import failed:', error);
+      toast.error('Could not import hours file');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const addPayCode = async () => {
+    if (!newPayCode.code.trim() || !newPayCode.department.trim()) { toast.error('Enter a code and department'); return; }
+    const { error } = await supabase.from('payroll_pay_codes').insert({ ...newPayCode, code: newPayCode.code.trim(), department: newPayCode.department.trim() });
+    if (error) { toast.error(error.code === '23505' ? 'That code and department already exist' : 'Could not save pay code'); return; }
+    setNewPayCode(emptyPayCode); setShowPayCodeForm(false); await loadSetup(); toast.success('Pay code added');
   };
 
   const exportWorkbook = async () => {
@@ -229,8 +276,9 @@ const PayrollDashboard = () => {
         </>}
 
         {activeTab === 'lines' && <Card>
-          <CardHeader><CardTitle className="flex items-center justify-between text-lg">Recurring Pay Lines <Button size="sm" onClick={() => setShowPayLineForm(value => !value)}><Plus className="mr-2 h-4 w-4" />Add Pay Line</Button></CardTitle><CardDescription>Set up the rows that should appear for each employee in the Future Systems worksheet.</CardDescription></CardHeader>
+          <CardHeader><CardTitle className="flex items-center justify-between text-lg">Recurring Pay Lines <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => setShowPayCodeForm(value => !value)}><Plus className="mr-2 h-4 w-4" />Pay Code</Button><Button size="sm" onClick={() => setShowPayLineForm(value => !value)}><Plus className="mr-2 h-4 w-4" />Add Pay Line</Button></div></CardTitle><CardDescription>Set up the rows that should appear for each employee in the Future Systems worksheet.</CardDescription></CardHeader>
           <CardContent className="space-y-4">
+            {showPayCodeForm && <div className="grid gap-3 rounded-md border p-4 md:grid-cols-4"><div className="space-y-1"><Label>Code</Label><Input value={newPayCode.code} onChange={event => setNewPayCode({ ...newPayCode, code: event.target.value })} /></div><div className="space-y-1"><Label>Department</Label><Input value={newPayCode.department} onChange={event => setNewPayCode({ ...newPayCode, department: event.target.value })} /></div><div className="space-y-1"><Label>Default type</Label><select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={newPayCode.default_pay_type} onChange={event => setNewPayCode({ ...newPayCode, default_pay_type: event.target.value })}>{payTypeOptions.map(option => <option key={option}>{option}</option>)}</select></div><div className="flex items-end gap-2"><Button onClick={() => void addPayCode()}>Save Code</Button><Button variant="outline" onClick={() => setShowPayCodeForm(false)}>Cancel</Button></div></div>}
             {showPayLineForm && <div className="grid gap-3 rounded-md border p-4 md:grid-cols-4"><div className="space-y-1"><Label>Employee</Label><select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={newLine.employee_id} onChange={event => setNewLine({ ...newLine, employee_id: event.target.value })}><option value="">Choose employee</option>{employees.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div><div className="space-y-1"><Label>Pay code</Label><select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={newLine.pay_code_id} onChange={event => { const code = payCodes.find(item => item.id === event.target.value); setNewLine({ ...newLine, pay_code_id: event.target.value, department: code?.department || newLine.department, pay_type: code?.default_pay_type || newLine.pay_type }); }}><option value="">Choose code</option>{payCodes.map(code => <option key={code.id} value={code.id}>{code.code} · {code.department}</option>)}</select></div><div className="space-y-1"><Label>Department</Label><Input value={newLine.department} onChange={event => setNewLine({ ...newLine, department: event.target.value })} /></div><div className="space-y-1"><Label>Task / location label</Label><Input value={newLine.task_label} onChange={event => setNewLine({ ...newLine, task_label: event.target.value })} /></div><div className="space-y-1"><Label>Future Systems employee #</Label><Input value={newLine.provider_employee_number} onChange={event => setNewLine({ ...newLine, provider_employee_number: event.target.value })} /></div><div className="space-y-1"><Label>Rate</Label><Input type="number" min="0" step="0.01" value={newLine.rate} onChange={event => setNewLine({ ...newLine, rate: event.target.value })} /></div><div className="space-y-1"><Label>Type</Label><select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={newLine.pay_type} onChange={event => setNewLine({ ...newLine, pay_type: event.target.value })}>{payTypeOptions.map(option => <option key={option}>{option}</option>)}</select></div><div className="space-y-1"><Label>Effective date</Label><Input type="date" value={newLine.effective_date} onChange={event => setNewLine({ ...newLine, effective_date: event.target.value })} /></div><div className="flex items-end gap-2 md:col-span-4"><Button onClick={() => void addPayLine()}>Save Pay Line</Button><Button variant="outline" onClick={() => setShowPayLineForm(false)}>Cancel</Button></div></div>}
             <div className="overflow-auto"><Table className="min-w-[1000px]"><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Employee #</TableHead><TableHead>Code</TableHead><TableHead>Department</TableHead><TableHead>Task / Location</TableHead><TableHead>Rate</TableHead><TableHead>Type</TableHead><TableHead>Effective</TableHead></TableRow></TableHeader><TableBody>{payLines.map(line => <TableRow key={line.id}><TableCell>{line.display_name}</TableCell><TableCell>{line.provider_employee_number || '—'}</TableCell><TableCell>{line.pay_code?.code || '—'}</TableCell><TableCell>{line.department}</TableCell><TableCell>{line.task_label}</TableCell><TableCell>${line.rate.toFixed(2)}</TableCell><TableCell>{line.pay_type}</TableCell><TableCell>{line.effective_date}</TableCell></TableRow>)}</TableBody></Table></div>
           </CardContent>
