@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDays, format, startOfWeek } from 'date-fns';
-import { CalendarRange, Download, Loader2, Plus, RefreshCw, Settings2, Upload, Wallet } from 'lucide-react';
+import { CalendarRange, Download, Loader2, Plus, RefreshCw, Upload, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ type PayLine = {
   pay_type: string;
   effective_date: string;
   is_active: boolean;
+  sort_order: number;
   pay_code?: PayCode;
 };
 type Period = { id: string; period_start: string; period_end: string; check_date: string | null; status: string };
