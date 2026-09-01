@@ -26,6 +26,7 @@ type PayLine = {
   rate: number;
   pay_type: string;
   effective_date: string;
+  end_date: string | null;
   is_active: boolean;
   sort_order: number;
   pay_code?: PayCode;
