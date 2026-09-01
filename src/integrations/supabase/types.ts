@@ -795,6 +795,378 @@ export type Database = {
           },
         ]
       }
+      payroll_employee_lines: {
+        Row: {
+          created_at: string
+          department: string
+          display_name: string
+          effective_date: string
+          employee_id: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          pay_code_id: string
+          pay_type: string
+          provider_employee_number: string | null
+          rate: number
+          sort_order: number
+          task_label: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          display_name: string
+          effective_date?: string
+          employee_id?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          pay_code_id: string
+          pay_type?: string
+          provider_employee_number?: string | null
+          rate?: number
+          sort_order?: number
+          task_label: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          display_name?: string
+          effective_date?: string
+          employee_id?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          pay_code_id?: string
+          pay_type?: string
+          provider_employee_number?: string | null
+          rate?: number
+          sort_order?: number
+          task_label?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_employee_lines_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_employee_lines_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "users_safe_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_employee_lines_pay_code_id_fkey"
+            columns: ["pay_code_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_pay_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_hours_imports: {
+        Row: {
+          created_at: string
+          department: string | null
+          employee_id: string | null
+          employee_line_id: string | null
+          hours: number
+          id: string
+          imported_by: string | null
+          ot_hours: number
+          period_id: string
+          provider_employee_number: string | null
+          raw_name: string
+          source_filename: string | null
+          task_label: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          employee_id?: string | null
+          employee_line_id?: string | null
+          hours?: number
+          id?: string
+          imported_by?: string | null
+          ot_hours?: number
+          period_id: string
+          provider_employee_number?: string | null
+          raw_name: string
+          source_filename?: string | null
+          task_label?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          employee_id?: string | null
+          employee_line_id?: string | null
+          hours?: number
+          id?: string
+          imported_by?: string | null
+          ot_hours?: number
+          period_id?: string
+          provider_employee_number?: string | null
+          raw_name?: string
+          source_filename?: string | null
+          task_label?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_hours_imports_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_hours_imports_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "users_safe_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_hours_imports_employee_line_id_fkey"
+            columns: ["employee_line_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_employee_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_hours_imports_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_pay_codes: {
+        Row: {
+          code: string
+          created_at: string
+          default_pay_type: string
+          department: string
+          description: string | null
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          default_pay_type?: string
+          department: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          default_pay_type?: string
+          department?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payroll_periods: {
+        Row: {
+          check_date: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          period_end: string
+          period_start: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          check_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          period_end: string
+          period_start: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          check_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          period_end?: string
+          period_start?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payroll_run_lines: {
+        Row: {
+          code: string
+          created_at: string
+          department: string
+          display_name: string
+          employee_id: string | null
+          employee_line_id: string | null
+          id: string
+          notes: string | null
+          ot_hours: number
+          pay_type: string
+          period_id: string
+          provider_employee_number: string | null
+          quantity: number
+          rate: number
+          sort_order: number
+          task_label: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          department: string
+          display_name: string
+          employee_id?: string | null
+          employee_line_id?: string | null
+          id?: string
+          notes?: string | null
+          ot_hours?: number
+          pay_type?: string
+          period_id: string
+          provider_employee_number?: string | null
+          quantity?: number
+          rate?: number
+          sort_order?: number
+          task_label: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          department?: string
+          display_name?: string
+          employee_id?: string | null
+          employee_line_id?: string | null
+          id?: string
+          notes?: string | null
+          ot_hours?: number
+          pay_type?: string
+          period_id?: string
+          provider_employee_number?: string | null
+          quantity?: number
+          rate?: number
+          sort_order?: number
+          task_label?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_run_lines_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_run_lines_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "users_safe_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_run_lines_employee_line_id_fkey"
+            columns: ["employee_line_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_employee_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_run_lines_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_work_type_map: {
+        Row: {
+          created_at: string
+          id: string
+          location_id: string | null
+          pay_code_id: string
+          task_label: string | null
+          updated_at: string
+          work_type_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location_id?: string | null
+          pay_code_id: string
+          task_label?: string | null
+          updated_at?: string
+          work_type_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location_id?: string | null
+          pay_code_id?: string
+          task_label?: string | null
+          updated_at?: string
+          work_type_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_work_type_map_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_work_type_map_pay_code_id_fkey"
+            columns: ["pay_code_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_pay_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_work_type_map_work_type_id_fkey"
+            columns: ["work_type_id"]
+            isOneToOne: false
+            referencedRelation: "work_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_configs: {
         Row: {
           client_id: string
