@@ -44,7 +44,7 @@ erDiagram
 
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Participants can reply to tickets | INSERT | authenticated | `` | `user_id = auth.uid() AND EXISTS ( SELECT 1 FROM public.tickets t WHERE t.id = ticket_id AND (t.submitted_by = auth.uid(…` | `has_role_or_higher` | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
+| Participants can reply to tickets | INSERT | authenticated |  | `user_id = auth.uid() AND EXISTS ( SELECT 1 FROM public.tickets t WHERE t.id = ticket_id AND (t.submitted_by = auth.uid(…` | `has_role_or_higher` | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
 | Replies follow ticket visibility | SELECT | authenticated | `EXISTS ( SELECT 1 FROM public.tickets t WHERE t.id = ticket_id AND (t.submitted_by = auth.uid() OR public.has_role_or_h…` |  | `has_role_or_higher` | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
 
 ## Used by code

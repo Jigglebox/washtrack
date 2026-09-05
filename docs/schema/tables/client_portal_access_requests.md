@@ -61,7 +61,7 @@ erDiagram
 | --- | --- | --- | --- | --- | --- | --- |
 | Finance+ read all requests | SELECT | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20260624214004_8a349c83-7751-43a6-8c27-1ece902bed41.sql` |
 | Finance+ update requests | UPDATE | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20260624214004_8a349c83-7751-43a6-8c27-1ece902bed41.sql` |
-| Portal users create own requests | INSERT | authenticated | `` | `portal_user_id = public.get_portal_user_id(auth.uid()) AND status = 'pending' AND public.is_portal_approved(auth.uid())` | `get_portal_user_id`, `is_portal_approved` | `20260624221350_0abfecd5-51ce-493c-9711-b5544a85d673.sql` |
+| Portal users create own requests | INSERT | authenticated |  | `portal_user_id = public.get_portal_user_id(auth.uid()) AND status = 'pending' AND public.is_portal_approved(auth.uid())` | `get_portal_user_id`, `is_portal_approved` | `20260624221350_0abfecd5-51ce-493c-9711-b5544a85d673.sql` |
 | Portal users read own requests | SELECT | authenticated | `portal_user_id = public.get_portal_user_id(auth.uid())` |  | `get_portal_user_id` | `20260624214004_8a349c83-7751-43a6-8c27-1ece902bed41.sql` |
 
 ## Triggers

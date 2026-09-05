@@ -58,7 +58,7 @@ erDiagram
 | --- | --- | --- | --- | --- | --- | --- |
 | Admin can delete dealership rates | DELETE | authenticated | `public.has_role_or_higher(auth.uid(), 'admin'::app_role)` |  | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
 | Authenticated can view dealership rates | SELECT | authenticated | `true` |  |  | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
-| Finance+ can insert dealership rates | INSERT | authenticated | `` | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
+| Finance+ can insert dealership rates | INSERT | authenticated |  | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
 | Finance+ can update dealership rates | UPDATE | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
 
 ## Triggers

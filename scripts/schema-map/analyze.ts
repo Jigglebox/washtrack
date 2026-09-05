@@ -2,9 +2,18 @@
 // FKs, detects junction tables, infers undeclared relationships, finds hub
 // tables, clusters the graph into domains, and collects drift warnings.
 
-import type { Cluster, CodeRef, PolymorphicRef, Relationship, SchemaGraph, SqlFunction, Table } from './model.ts';
+import type { Cluster, CodeRef, LiveInfo, PolymorphicRef, Relationship, SchemaGraph, SqlFunction, Table } from './model.ts';
+import type { LiveSnapshot } from './live-db.ts';
 import type { ParsedTypes } from './parse-types.ts';
 import type { MigrationState } from './parse-sql.ts';
+
+export type AnalyzeContext = {
+  /** Migrations from the repo, for "is this defined in a migration?" when the primary source is the live database */
+  staticMig: MigrationState;
+  live: LiveInfo;
+  liveSnapshot?: LiveSnapshot;
+  extraWarnings?: string[];
+};
 
 export type AnalyzeOptions = {
   /** A table is a hub when at least this fraction of other tables reference it */
@@ -23,8 +32,10 @@ const PEOPLE_WORDS = new Set([
 const setEq = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.includes(x));
 const uniq = <T>(xs: T[]) => [...new Set(xs)];
 
-export function buildGraph(types: ParsedTypes, mig: MigrationState, codeRefs: CodeRef[], opts: AnalyzeOptions): SchemaGraph {
-  const warnings: string[] = [];
+export function buildGraph(types: ParsedTypes, mig: MigrationState, codeRefs: CodeRef[], opts: AnalyzeOptions, ctx: AnalyzeContext): SchemaGraph {
+  const warnings: string[] = [...(ctx.extraWarnings ?? [])];
+  const isLive = !!ctx.liveSnapshot;
+  const primary = isLive ? 'live database' : 'types.ts';
   const tables = new Map<string, Table>();
 
   // ---- tables & views (types.ts is the source of truth for what exists)
@@ -43,12 +54,18 @@ export function buildGraph(types: ParsedTypes, mig: MigrationState, codeRefs: Co
       isJunction: false,
       isHub: false,
       inboundDegree: 0,
-      sources: uniq(['types.ts', ...(m?.sources ?? [])]),
+      sources: uniq([primary, ...(ctx.staticMig.tables.get(e.name)?.sources ?? [])]),
+      rowCount: ctx.liveSnapshot?.rowCounts[e.name],
+      viewDefinition: ctx.liveSnapshot?.views[e.name]?.definition,
+      viewTables: ctx.liveSnapshot?.views[e.name]?.tables,
+      comment: ctx.liveSnapshot?.comments[e.name],
     });
-    if (e.kind === 'table' && !m) warnings.push(`Table \`${e.name}\` is in types.ts but no migration creates it (created via the dashboard, or a migration was skipped).`);
-    if (e.kind === 'view' && !mig.views.has(e.name)) warnings.push(`View \`${e.name}\` is in types.ts but no migration defines it (defined via the dashboard).`);
+    if (!isLive) {
+      if (e.kind === 'table' && !m) warnings.push(`Table \`${e.name}\` is in types.ts but no migration creates it (created via the dashboard, or a migration was skipped).`);
+      if (e.kind === 'view' && !mig.views.has(e.name)) warnings.push(`View \`${e.name}\` is in types.ts but no migration defines it (defined via the dashboard).`);
+    }
   }
-  for (const [name] of mig.tables) {
+  if (!isLive) for (const [name] of mig.tables) {
     if (!tables.has(name) && !name.includes('.')) warnings.push(`Migrations create table \`${name}\` but it is missing from types.ts (types.ts is stale, or the table was dropped via the dashboard).`);
   }
 
@@ -84,7 +101,7 @@ export function buildGraph(types: ParsedTypes, mig: MigrationState, codeRefs: Co
         const optional = fk.fromCols.every((c) => src.columns.find((x) => x.name === c)?.nullable ?? false);
         relationships.push({ name: fk.name, from: mt.name, fromCols: fk.fromCols, to: fk.to, toCols: fk.toCols, oneToOne: false, optional, kind: 'external', note: `defined in ${fk.source}` });
         markFk(mt.name, fk.fromCols);
-      } else if (tables.has(fk.to) && !declaredKeys.has(`${mt.name}|${fk.fromCols.join(',')}|${fk.to}`)) {
+      } else if (!isLive && tables.has(fk.to) && !declaredKeys.has(`${mt.name}|${fk.fromCols.join(',')}|${fk.to}`)) {
         warnings.push(`FK \`${fk.name}\` (${mt.name}.${fk.fromCols.join(',')} -> ${fk.to}) is in migrations but not in types.ts. It may have been dropped, or types.ts is stale.`);
       }
     }
@@ -134,7 +151,7 @@ export function buildGraph(types: ParsedTypes, mig: MigrationState, codeRefs: Co
     const sqlTypes = mig.tables.get(t.name)?.columnTypes ?? {};
     for (const c of t.columns) {
       if (covered.has(c.name)) continue;
-      if (c.type !== 'string') continue;
+      if (c.type !== 'string' && c.type !== 'uuid') continue;
       if (sqlTypes[c.name] && sqlTypes[c.name] !== 'uuid') continue;
       const m = c.name.match(/^(.+?)_(id|uuid)$/) ?? c.name.match(/^(.+?)_(by)$/);
       if (!m) continue;
@@ -165,12 +182,12 @@ export function buildGraph(types: ParsedTypes, mig: MigrationState, codeRefs: Co
 
   // ---- functions: merge migrations + types.ts
   const functions = new Map<string, SqlFunction>();
-  for (const f of mig.functions.values()) functions.set(f.name, { ...f, tables: f.tables.filter((x) => tables.has(x)) });
+  for (const f of mig.functions.values()) functions.set(f.name, { ...f, tables: f.tables.filter((x) => tables.has(x)), inMigrations: ctx.staticMig.functions.has(f.name) });
   for (const f of types.functions) {
     const existing = functions.get(f.name);
     if (existing) { existing.inTypes = true; if (!existing.returns) existing.returns = f.returns; continue; }
-    functions.set(f.name, { name: f.name, args: f.args, returns: f.returns, language: '', securityDefiner: false, tables: [], calls: [], inTypes: true, inMigrations: false });
-    warnings.push(`Function \`${f.name}\` is exposed in types.ts but no migration defines it (created via the dashboard).`);
+    functions.set(f.name, { name: f.name, args: f.args, returns: f.returns, language: '', securityDefiner: false, tables: [], calls: [], inTypes: true, inMigrations: ctx.staticMig.functions.has(f.name) });
+    if (!isLive) warnings.push(`Function \`${f.name}\` is exposed in types.ts but no migration defines it (created via the dashboard).`);
   }
   for (const f of functions.values()) f.calls = f.calls.filter((c) => functions.has(c) && c !== f.name);
 
@@ -181,26 +198,28 @@ export function buildGraph(types: ParsedTypes, mig: MigrationState, codeRefs: Co
     return false;
   }).map((p) => ({ ...p, helpers: p.helpers.filter((h) => functions.has(h)), tables: p.tables.filter((t) => tables.has(t) && t !== p.table) }));
   const triggers = [...mig.triggers.values()].filter((t) => {
-    if (tables.has(t.table)) return true;
+    if (tables.has(t.table) || t.table.includes('.')) return true;
     warnings.push(`Trigger \`${t.name}\` targets \`${t.table}\`, which is not in types.ts.`);
     return false;
   });
   for (const t of nonExternalTables) {
     const n = policies.filter((p) => p.table === t.name).length;
-    if (!t.rlsEnabled) warnings.push(`Table \`${t.name}\` has no RLS enabled in migrations: every API role can read and write it (unless enabled via the dashboard).`);
+    if (!t.rlsEnabled) warnings.push(isLive ? `Table \`${t.name}\` has RLS disabled: every API role can read and write it.` : `Table \`${t.name}\` has no RLS enabled in migrations: every API role can read and write it (unless enabled via the dashboard).`);
     else if (n === 0) warnings.push(`Table \`${t.name}\` has RLS enabled but no policies: only service-role and SECURITY DEFINER functions can reach it.`);
   }
 
   // ---- code refs (only known tables/rpcs; unknown ones are worth a warning)
   const refs = codeRefs.map((r) => {
-    for (const t of r.tables) if (!tables.has(t)) warnings.push(`\`${r.file}\` queries \`${t}\`, which is not in types.ts.`);
-    for (const f of r.rpcs) if (!functions.has(f)) warnings.push(`\`${r.file}\` calls rpc \`${f}\`, which is not in types.ts.`);
+    const where = isLive ? 'the live database' : 'types.ts';
+    for (const t of r.tables) if (!tables.has(t)) warnings.push(`\`${r.file}\` queries \`${t}\`, which is not in ${where}.`);
+    for (const f of r.rpcs) if (!functions.has(f)) warnings.push(`\`${r.file}\` calls rpc \`${f}\`, which is not in ${where}.`);
     return { ...r, tables: r.tables.filter((t) => tables.has(t)), rpcs: r.rpcs.filter((f) => functions.has(f)) };
   });
 
   const sortByName = <T extends { name: string }>(xs: T[]) => xs.sort((a, b) => a.name.localeCompare(b.name));
   return {
     generatedAt: new Date().toISOString(),
+    live: ctx.live,
     tables: sortByName([...tables.values()]),
     relationships: relationships.sort((a, b) => a.from.localeCompare(b.from) || a.to.localeCompare(b.to) || a.name.localeCompare(b.name)),
     policies: policies.sort((a, b) => a.table.localeCompare(b.table) || a.name.localeCompare(b.name)),

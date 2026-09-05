@@ -41,7 +41,7 @@ erDiagram
 
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Users can insert their own message view record | INSERT | authenticated | `` | `auth.uid() = user_id` |  | `20260721044724_11b216aa-73c9-4d96-aa1b-78f26aeaf059.sql` |
+| Users can insert their own message view record | INSERT | authenticated |  | `auth.uid() = user_id` |  | `20260721044724_11b216aa-73c9-4d96-aa1b-78f26aeaf059.sql` |
 | Users can update their own message view record | UPDATE | authenticated | `auth.uid() = user_id` | `auth.uid() = user_id` |  | `20260721044724_11b216aa-73c9-4d96-aa1b-78f26aeaf059.sql` |
 | Users can view their own message view record | SELECT | authenticated | `auth.uid() = user_id` |  |  | `20260721044724_11b216aa-73c9-4d96-aa1b-78f26aeaf059.sql` |
 

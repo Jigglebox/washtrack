@@ -44,7 +44,7 @@ erDiagram
 
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Reporter or super admin can insert replies | INSERT | authenticated | `` | `user_id = auth.uid() AND ( EXISTS (SELECT 1 FROM public.error_reports er WHERE er.id = report_id AND er.reported_by = a…` | `is_super_admin` | `20260622231126_8bdc1f64-efcd-40a1-bc50-9c17cc5f8686.sql` |
+| Reporter or super admin can insert replies | INSERT | authenticated |  | `user_id = auth.uid() AND ( EXISTS (SELECT 1 FROM public.error_reports er WHERE er.id = report_id AND er.reported_by = a…` | `is_super_admin` | `20260622231126_8bdc1f64-efcd-40a1-bc50-9c17cc5f8686.sql` |
 | Reporter or super admin can view replies | SELECT | authenticated | `EXISTS (SELECT 1 FROM public.error_reports er WHERE er.id = report_id AND er.reported_by = auth.uid()) OR public.is_sup…` |  | `is_super_admin` | `20260622231126_8bdc1f64-efcd-40a1-bc50-9c17cc5f8686.sql` |
 
 ## Used by code

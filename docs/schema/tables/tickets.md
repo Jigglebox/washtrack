@@ -74,7 +74,7 @@ erDiagram
 | --- | --- | --- | --- | --- | --- | --- |
 | Admins can delete tickets | DELETE | authenticated | `public.has_role_or_higher(auth.uid(), 'admin'::app_role)` |  | `has_role_or_higher` | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
 | Finance and above can update tickets | UPDATE | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` | `has_role_or_higher` | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
-| Managers and above can create tickets | INSERT | authenticated | `` | `submitted_by = auth.uid() AND public.has_role_or_higher(auth.uid(), 'manager'::app_role)` | `has_role_or_higher` | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
+| Managers and above can create tickets | INSERT | authenticated |  | `submitted_by = auth.uid() AND public.has_role_or_higher(auth.uid(), 'manager'::app_role)` | `has_role_or_higher` | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
 | View own tickets or all for finance and above | SELECT | authenticated | `submitted_by = auth.uid() OR public.has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
 
 ## Triggers

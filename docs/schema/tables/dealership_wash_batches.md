@@ -58,7 +58,7 @@ erDiagram
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 | Admin delete batches | DELETE | authenticated | `public.has_role_or_higher(auth.uid(), 'admin'::app_role) OR (employee_id = auth.uid() AND work_date = CURRENT_DATE)` |  | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
-| Employees insert their own batches | INSERT | authenticated | `` | `employee_id = auth.uid() AND ( public.has_role_or_higher(auth.uid(), 'finance'::app_role) OR EXISTS ( SELECT 1 FROM pub…` | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
+| Employees insert their own batches | INSERT | authenticated |  | `employee_id = auth.uid() AND ( public.has_role_or_higher(auth.uid(), 'finance'::app_role) OR EXISTS ( SELECT 1 FROM pub…` | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
 | Employees update their own same-day batches; finance any | UPDATE | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role) OR (employee_id = auth.uid() AND work_date = CURRENT_DATE)` |  | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
 | Employees view batches at assigned locations | SELECT | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role) OR EXISTS ( SELECT 1 FROM public.user_locations ul WHERE ul.…` |  | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
 

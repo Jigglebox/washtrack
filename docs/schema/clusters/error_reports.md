@@ -37,5 +37,5 @@ erDiagram
 
 ## Connections to other domains
 
-- [auth.users](../tables/auth_users.md)
+- `auth.users`
 - [users](../tables/users.md) ([users](../clusters/users.md))

@@ -48,7 +48,7 @@ erDiagram
 
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Authenticated users can insert activity logs | INSERT | authenticated | `` | `auth.uid() = user_id` |  | `20260310210949_28c1bc29-366f-4335-9837-d9a9680f1773.sql` |
+| Authenticated users can insert activity logs | INSERT | authenticated |  | `auth.uid() = user_id` |  | `20260310210949_28c1bc29-366f-4335-9837-d9a9680f1773.sql` |
 | Super admins can view activity logs | SELECT | authenticated | `public.is_super_admin(auth.uid())` |  | `is_super_admin` | `20260310210949_28c1bc29-366f-4335-9837-d9a9680f1773.sql` |
 
 ## Used by SQL

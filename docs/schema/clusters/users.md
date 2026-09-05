@@ -87,7 +87,7 @@ erDiagram
 
 ## Connections to other domains
 
-- [auth.users](../tables/auth_users.md)
+- `auth.users`
 - [dealership_location_requests](../tables/dealership_location_requests.md) ([clients](../clusters/clients.md))
 - [dealership_rates](../tables/dealership_rates.md) ([clients](../clusters/clients.md))
 - [dealership_wash_batches](../tables/dealership_wash_batches.md) ([clients](../clusters/clients.md))

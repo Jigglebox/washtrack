@@ -60,7 +60,7 @@ erDiagram
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 | Admins can view all approval requests | SELECT | public | `has_role(auth.uid(), 'admin'::app_role)` |  | `has_role` | `20251030043513_4d19a151-b457-4873-802e-d5655eabb411.sql` |
-| Employees can create approval requests | INSERT | public | `` | `auth.uid() = employee_id` |  | `20251030043513_4d19a151-b457-4873-802e-d5655eabb411.sql` |
+| Employees can create approval requests | INSERT | public |  | `auth.uid() = employee_id` |  | `20251030043513_4d19a151-b457-4873-802e-d5655eabb411.sql` |
 | Employees can view own approval requests | SELECT | public | `auth.uid() = employee_id` |  |  | `20251030043513_4d19a151-b457-4873-802e-d5655eabb411.sql` |
 | Managers can update assigned requests | UPDATE | public | `auth.uid() = manager_id AND status = 'pending'` |  |  | `20251030043513_4d19a151-b457-4873-802e-d5655eabb411.sql` |
 | Managers can view assigned requests | SELECT | public | `auth.uid() = manager_id AND status = 'pending'` |  |  | `20251030043513_4d19a151-b457-4873-802e-d5655eabb411.sql` |

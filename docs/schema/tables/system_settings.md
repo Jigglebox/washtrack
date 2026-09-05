@@ -51,7 +51,7 @@ erDiagram
 
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Admin can insert system settings | INSERT | public | `` | `has_role(auth.uid(), 'admin')` | `has_role` | `20251011054150_29aaf8ff-e3c9-445f-8d01-bdf978d62c52.sql` |
+| Admin can insert system settings | INSERT | public |  | `has_role(auth.uid(), 'admin')` | `has_role` | `20251011054150_29aaf8ff-e3c9-445f-8d01-bdf978d62c52.sql` |
 | Admin can update system settings | UPDATE | public | `has_role(auth.uid(), 'admin')` |  | `has_role` | `20251011054150_29aaf8ff-e3c9-445f-8d01-bdf978d62c52.sql` |
 | All authenticated users can read system settings | SELECT | public | `true` |  |  | `20251011054150_29aaf8ff-e3c9-445f-8d01-bdf978d62c52.sql` |
 

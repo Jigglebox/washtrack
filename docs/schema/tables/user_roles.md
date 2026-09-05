@@ -45,11 +45,11 @@ erDiagram
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 | Admins can delete roles | DELETE | public | `public.has_role(auth.uid(), 'admin'::app_role)` |  | `has_role` | `20251011024241_c9f67c09-df20-4269-ab5d-d90b22a70c96.sql` |
-| Admins can insert roles | INSERT | public | `` | `public.has_role(auth.uid(), 'admin'::app_role)` | `has_role` | `20251011024241_c9f67c09-df20-4269-ab5d-d90b22a70c96.sql` |
+| Admins can insert roles | INSERT | public |  | `public.has_role(auth.uid(), 'admin'::app_role)` | `has_role` | `20251011024241_c9f67c09-df20-4269-ab5d-d90b22a70c96.sql` |
 | Admins can update roles | UPDATE | public | `public.has_role(auth.uid(), 'admin'::app_role)` |  | `has_role` | `20251011024241_c9f67c09-df20-4269-ab5d-d90b22a70c96.sql` |
 | Employees can view their own roles | SELECT | public | `auth.uid() = user_id AND public.has_role(auth.uid(), 'employee'::app_role)` |  | `has_role` | `20251011030116_d0a26d5e-5ff4-4bd6-bb5b-dbf50e5222c4.sql` |
 | Finance can delete lower roles | DELETE | public | `has_role_or_higher(auth.uid(), 'finance'::app_role) AND role NOT IN ('admin'::app_role, 'super_admin'::app_role)` |  | `has_role_or_higher` | `20260108203209_c88d0e0a-5752-4578-8d40-2a7eb45622e2.sql` |
-| Finance can insert roles up to finance | INSERT | public | `` | `has_role_or_higher(auth.uid(), 'finance'::app_role) AND role NOT IN ('admin'::app_role, 'super_admin'::app_role)` | `has_role_or_higher` | `20260108203209_c88d0e0a-5752-4578-8d40-2a7eb45622e2.sql` |
+| Finance can insert roles up to finance | INSERT | public |  | `has_role_or_higher(auth.uid(), 'finance'::app_role) AND role NOT IN ('admin'::app_role, 'super_admin'::app_role)` | `has_role_or_higher` | `20260108203209_c88d0e0a-5752-4578-8d40-2a7eb45622e2.sql` |
 | Finance can update lower roles | UPDATE | public | `has_role_or_higher(auth.uid(), 'finance'::app_role) AND role NOT IN ('admin'::app_role, 'super_admin'::app_role)` |  | `has_role_or_higher` | `20260108203209_c88d0e0a-5752-4578-8d40-2a7eb45622e2.sql` |
 | Prevent deleting super admin roles by non-super-admins | DELETE | public | `role != 'super_admin' OR has_role(auth.uid(), 'super_admin')` |  | `has_role` | `20251012034943_f78bd2c2-5033-42a7-b3ed-eac03613c494.sql` |
 | Prevent editing super admin users by non-super-admins | UPDATE | public | `role != 'super_admin' OR has_role(auth.uid(), 'super_admin')` |  | `has_role` | `20251012034943_f78bd2c2-5033-42a7-b3ed-eac03613c494.sql` |

@@ -88,7 +88,7 @@ erDiagram
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 | Admin+ can delete portal users | DELETE | authenticated | `public.has_role_or_higher(auth.uid(), 'admin'::app_role)` |  | `has_role_or_higher` | `20260624214004_8a349c83-7751-43a6-8c27-1ece902bed41.sql` |
-| Admin+ can insert portal users | INSERT | authenticated | `` | `public.has_role_or_higher(auth.uid(), 'admin'::app_role)` | `has_role_or_higher` | `20260624214004_8a349c83-7751-43a6-8c27-1ece902bed41.sql` |
+| Admin+ can insert portal users | INSERT | authenticated |  | `public.has_role_or_higher(auth.uid(), 'admin'::app_role)` | `has_role_or_higher` | `20260624214004_8a349c83-7751-43a6-8c27-1ece902bed41.sql` |
 | Finance+ can read all portal users | SELECT | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20260624214004_8a349c83-7751-43a6-8c27-1ece902bed41.sql` |
 | Finance+ can update portal users | UPDATE | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20260624214004_8a349c83-7751-43a6-8c27-1ece902bed41.sql` |
 | Portal users can read own profile | SELECT | authenticated | `auth_user_id = auth.uid()` |  |  | `20260624214004_8a349c83-7751-43a6-8c27-1ece902bed41.sql` |

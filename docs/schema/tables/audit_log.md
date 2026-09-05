@@ -53,7 +53,7 @@ erDiagram
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 | Managers and admins can view audit logs | SELECT | authenticated | `EXISTS ( SELECT 1 FROM user_roles WHERE user_roles.user_id = auth.uid() AND user_roles.role IN ('manager', 'admin', 'su…` |  |  | `20251031033503_58d57205-49cf-441e-bd45-c1d307483c5d.sql` |
-| System can insert audit logs | INSERT | authenticated | `` | `true` |  | `20251031033503_58d57205-49cf-441e-bd45-c1d307483c5d.sql` |
+| System can insert audit logs | INSERT | authenticated |  | `true` |  | `20251031033503_58d57205-49cf-441e-bd45-c1d307483c5d.sql` |
 
 ## Used by SQL
 

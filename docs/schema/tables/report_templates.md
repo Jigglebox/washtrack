@@ -61,7 +61,7 @@ erDiagram
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 | Creators can update their templates | UPDATE | public | `created_by = auth.uid() OR has_role(auth.uid(), 'admin'::app_role)` |  | `has_role` | `20251106072318_f52b608e-d650-4fb0-829a-ebc8971a41da.sql` |
-| Finance users can create templates | INSERT | public | `` | `has_role_or_higher(auth.uid(), 'finance'::app_role) AND created_by = auth.uid()` | `has_role_or_higher` | `20251106072318_f52b608e-d650-4fb0-829a-ebc8971a41da.sql` |
+| Finance users can create templates | INSERT | public |  | `has_role_or_higher(auth.uid(), 'finance'::app_role) AND created_by = auth.uid()` | `has_role_or_higher` | `20251106072318_f52b608e-d650-4fb0-829a-ebc8971a41da.sql` |
 | Finance users can view shared templates | SELECT | public | `has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20251106072318_f52b608e-d650-4fb0-829a-ebc8971a41da.sql` |
 | Template deletion by owner or higher role | DELETE | authenticated | `is_system_template = false AND public.can_delete_report_template(created_by)` |  | `can_delete_report_template` | `20260812224139_2a25cb70-c1e7-4404-b28e-b242b9208e35.sql` |
 

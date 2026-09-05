@@ -108,7 +108,7 @@ erDiagram
 
 ## Connections to other domains
 
-- [auth.users](../tables/auth_users.md)
+- `auth.users`
 - [clients](../tables/clients.md) ([clients](../clusters/clients.md))
 - [locations](../tables/locations.md) ([locations](../clusters/locations.md))
 - [payroll_employee_lines](../tables/payroll_employee_lines.md) ([payroll_employee_lines](../clusters/payroll_employee_lines.md))

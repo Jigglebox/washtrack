@@ -61,7 +61,7 @@ erDiagram
 | Finance and admins can manage all requests | ALL | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` | `has_role_or_higher` | `20260721041612_70660937-8491-4e5d-a0c4-f7d58e6330ac.sql` |
 | Finance and admins can view all requests | SELECT | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20260721041612_70660937-8491-4e5d-a0c4-f7d58e6330ac.sql` |
 | Portal users can cancel their own open requests | DELETE | authenticated | `portal_user_id = public.get_portal_user_id(auth.uid()) AND fulfilled_at IS NULL` |  | `get_portal_user_id` | `20260721041612_70660937-8491-4e5d-a0c4-f7d58e6330ac.sql` |
-| Portal users can create requests for their locations | INSERT | authenticated | `` | `public.portal_has_location(auth.uid(), location_id) AND portal_user_id = public.get_portal_user_id(auth.uid())` | `portal_has_location`, `get_portal_user_id` | `20260721041612_70660937-8491-4e5d-a0c4-f7d58e6330ac.sql` |
+| Portal users can create requests for their locations | INSERT | authenticated |  | `public.portal_has_location(auth.uid(), location_id) AND portal_user_id = public.get_portal_user_id(auth.uid())` | `portal_has_location`, `get_portal_user_id` | `20260721041612_70660937-8491-4e5d-a0c4-f7d58e6330ac.sql` |
 | Portal users can view their location requests | SELECT | authenticated | `public.portal_has_location(auth.uid(), location_id)` |  | `portal_has_location` | `20260721041612_70660937-8491-4e5d-a0c4-f7d58e6330ac.sql` |
 
 ## Used by SQL

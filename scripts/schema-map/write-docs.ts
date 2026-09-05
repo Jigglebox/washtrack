@@ -7,7 +7,7 @@ import { codeFlowchart, erDiagram, triggerFlowchart } from './mermaid.ts';
 const fence = (code: string) => '```mermaid\n' + code + '\n```';
 const code = (s: string) => '`' + s + '`';
 const slug = (s: string) => s.replace(/[^A-Za-z0-9_-]/g, '_');
-const tableLink = (name: string, from: 'root' | 'sub') => `[${name}](${from === 'root' ? '' : '../'}tables/${slug(name)}.md)`;
+const tableLink = (name: string, from: 'root' | 'sub') => (name.includes('.') ? code(name) : `[${name}](${from === 'root' ? '' : '../'}tables/${slug(name)}.md)`);
 const clusterLink = (name: string, from: 'root' | 'sub') => `[${name}](${from === 'root' ? '' : '../'}clusters/${slug(name)}.md)`;
 const cell = (s: string | undefined, max = 90) => { const t = (s ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' '); return t.length > max ? t.slice(0, max - 1) + '…' : t; };
 const mdTable = (headers: string[], rows: string[][]) => [`| ${headers.join(' | ')} |`, `| ${headers.map(() => '---').join(' | ')} |`, ...rows.map((r) => `| ${r.join(' | ')} |`)].join('\n');
@@ -19,13 +19,19 @@ export function renderDocs(g: SchemaGraph, projectName: string): Map<string, str
   const realTables = g.tables.filter((t) => t.kind === 'table' && !t.sources.includes('external'));
   const views = g.tables.filter((t) => t.kind === 'view');
   const stamp = `_Generated ${g.generatedAt.slice(0, 10)} by ${code('scripts/schema-map')}. Do not edit by hand; run ${code('npm run schema:map')}._`;
+  const liveLine = g.live.connected
+    ? `Source of truth: **live database** (${code(g.live.host ?? '')}, ${code(g.live.database ?? '')}, ${g.live.serverVersion ?? ''}), read-only, compared against the migrations and types.ts in the repo.`
+    : g.live.error
+      ? `Source of truth: types.ts and migrations. **Live database connection failed**: ${g.live.error}`
+      : `Source of truth: types.ts and migrations in the repo. Set ${code('SUPABASE_DB_URL')} to read the live database instead (adds row counts, live policies, view definitions, and drift against the repo).`;
+  const rows = (t: Table) => (t.rowCount === undefined ? '' : t.rowCount.toLocaleString('en-US'));
 
   // ---------------------------------------------------------------- README
   const declared = g.relationships.filter((r) => r.kind === 'declared').length;
   const inferred = g.relationships.filter((r) => r.kind === 'inferred').length;
   const external = g.relationships.filter((r) => r.kind === 'external').length;
   const readme: string[] = [
-    `# ${projectName} schema map`, '', stamp, '',
+    `# ${projectName} schema map`, '', stamp, '', liveLine, '',
     'How this database fits together: every table, how they reference each other, which RLS policies guard them, what triggers and functions touch them, and which code talks to them.', '',
     '## At a glance', '',
     mdTable(['', 'Count'], [
@@ -40,6 +46,7 @@ export function renderDocs(g: SchemaGraph, projectName: string): Map<string, str
       ['SQL functions', String(g.functions.length)],
       ['Edge functions', String(new Set(g.codeRefs.filter((r) => r.kind === 'edge-function').map((r) => r.label)).size)],
       ['Frontend files querying the DB', String(g.codeRefs.filter((r) => r.kind === 'frontend').length)],
+      ...(g.live.connected ? [['Rows (live estimate, all tables)', realTables.reduce((n, t) => n + (t.rowCount ?? 0), 0).toLocaleString('en-US')]] : []),
     ]), '',
     '## Domains', '',
     'Tables grouped by how densely they reference each other. Hub tables (referenced by many others) get their own domain together with the tables that only reference them, and are drawn as stubs in every other domain diagram.', '',
@@ -76,7 +83,7 @@ export function renderDocs(g: SchemaGraph, projectName: string): Map<string, str
     const lines = [
       `# Domain: ${c.name}`, '', stamp, '', `[Back to overview](../README.md)`, '',
       '## Tables', '',
-      mdTable(['Table', 'Columns', 'RLS', 'Policies', 'Notes'], members.map((n) => { const t = g.tables.find((x) => x.name === n)!; return [tableLink(n, 'sub'), String(t.columns.length), t.rlsEnabled ? 'on' : '**off**', String(g.policies.filter((p) => p.table === n).length), [t.isHub ? 'hub' : '', t.isJunction ? 'junction' : ''].filter(Boolean).join(', ')]; })), '',
+      mdTable(['Table', 'Columns', ...(g.live.connected ? ['Rows'] : []), 'RLS', 'Policies', 'Notes'], members.map((n) => { const t = g.tables.find((x) => x.name === n)!; return [tableLink(n, 'sub'), String(t.columns.length), ...(g.live.connected ? [rows(t)] : []), t.rlsEnabled ? 'on' : '**off**', String(g.policies.filter((p) => p.table === n).length), [t.isHub ? 'hub' : '', t.isJunction ? 'junction' : ''].filter(Boolean).join(', ')]; })), '',
       '## Relationships', '',
       'Key columns only. Tables from other domains appear as stubs.', '',
       fence(erDiagram(g, { tables: members, attrsFor: () => 'keys', collapseJunctions: false, includeInferred: true, includeExternal: true, includeNeighbours: true })), '',
@@ -132,6 +139,8 @@ export function renderDocs(g: SchemaGraph, projectName: string): Map<string, str
 function renderTablePage(g: SchemaGraph, t: Table, clusterOf: Map<string, string>, stamp: string): string {
   const out: string[] = [`# ${t.kind === 'view' ? 'View' : 'Table'}: ${t.name}`, '', stamp, '', `[Back to overview](../README.md)${clusterOf.has(t.name) ? ` · Domain: [${clusterOf.get(t.name)}](../clusters/${slug(clusterOf.get(t.name)!)}.md)` : ''}`, ''];
   const facts: string[] = [];
+  if (t.comment) facts.push(`Comment: ${t.comment}`);
+  if (t.rowCount !== undefined) facts.push(`Rows: about ${t.rowCount.toLocaleString('en-US')} (live estimate)`);
   if (t.pk.length) facts.push(`Primary key: ${t.pk.map(code).join(', ')}`);
   for (const u of t.uniques) facts.push(`Unique: ${u.map(code).join(', ')}`);
   if (t.kind === 'table') facts.push(`RLS: ${t.rlsEnabled ? 'enabled' : '**not enabled**'}`);
@@ -163,13 +172,17 @@ function renderTablePage(g: SchemaGraph, t: Table, clusterOf: Map<string, string
   if (poly.length) out.push('**Polymorphic**', '', poly.map((p) => `- ${code(p.typeCol)} + ${code(p.idCol)} can point at any table`).join('\n'), '');
   if (!relsFrom.length && !relsTo.length && !m2m.length && !poly.length) out.push('_No relationships found._', '');
 
+  if (t.kind === 'view' && t.viewDefinition) {
+    out.push('## Definition', '', '```sql', t.viewDefinition, '```', '');
+    if (t.viewTables?.length) out.push('Reads from: ' + t.viewTables.map((x) => (g.tables.some((y) => y.name === x) ? tableLink(x, 'sub') : code(x))).join(', '), '');
+  }
   if (t.kind === 'table') {
     out.push('## Neighbourhood', '', fence(erDiagram(g, { tables: [t.name], attrsFor: () => 'all', collapseJunctions: false, includeInferred: true, includeExternal: true, includeNeighbours: true })), '');
   }
 
   const policies = g.policies.filter((p) => p.table === t.name);
   out.push('## RLS policies', '');
-  out.push(policies.length ? mdTable(['Policy', 'Command', 'Roles', 'Using', 'With check', 'Calls', 'Source'], policies.map((p) => [cell(p.name, 60), p.command + (p.permissive ? '' : ' (restrictive)'), p.roles.join(', '), code(cell(p.using, 120)) , p.check ? code(cell(p.check, 120)) : '', p.helpers.map(code).join(', '), code(p.source)])) : t.rlsEnabled ? '_RLS is enabled but no policies exist: only service-role access._' : '_None. Row level security is not enabled._', '');
+  out.push(policies.length ? mdTable(['Policy', 'Command', 'Roles', 'Using', 'With check', 'Calls', 'Source'], policies.map((p) => [cell(p.name, 60), p.command + (p.permissive ? '' : ' (restrictive)'), p.roles.join(', '), p.using ? code(cell(p.using, 120)) : '', p.check ? code(cell(p.check, 120)) : '', p.helpers.map(code).join(', '), code(p.source)])) : t.rlsEnabled ? '_RLS is enabled but no policies exist: only service-role access._' : '_None. Row level security is not enabled._', '');
 
   const triggers = g.triggers.filter((tr) => tr.table === t.name);
   if (triggers.length) out.push('## Triggers', '', mdTable(['Trigger', 'When', 'Function', 'Function touches'], triggers.map((tr) => { const f = g.functions.find((x) => x.name === tr.fn); return [code(tr.name), `${tr.timing} ${tr.events.join(' OR ')} FOR EACH ${tr.forEach}`, code(tr.fn + '()'), (f?.tables ?? []).filter((x) => x !== t.name).map((x) => tableLink(x, 'sub')).join(', ')]; })), '');

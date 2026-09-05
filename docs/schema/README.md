@@ -2,6 +2,8 @@
 
 _Generated 2026-09-05 by `scripts/schema-map`. Do not edit by hand; run `npm run schema:map`._
 
+Source of truth: types.ts and migrations in the repo. Set `SUPABASE_DB_URL` to read the live database instead (adds row counts, live policies, view definitions, and drift against the repo).
+
 How this database fits together: every table, how they reference each other, which RLS policies guard them, what triggers and functions touch them, and which code talks to them.
 
 ## At a glance

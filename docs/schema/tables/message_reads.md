@@ -45,7 +45,7 @@ erDiagram
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 | Finance and admin can view message reads | SELECT | public | `has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20251217032059_aa58817a-37c0-4ae8-a633-31519c9ace20.sql` |
-| Users can mark messages as read | INSERT | public | `` | `auth.uid() = user_id AND has_role_or_higher(auth.uid(), 'finance'::app_role)` | `has_role_or_higher` | `20251217032059_aa58817a-37c0-4ae8-a633-31519c9ace20.sql` |
+| Users can mark messages as read | INSERT | public |  | `auth.uid() = user_id AND has_role_or_higher(auth.uid(), 'finance'::app_role)` | `has_role_or_higher` | `20251217032059_aa58817a-37c0-4ae8-a633-31519c9ace20.sql` |
 
 ## Used by code
 

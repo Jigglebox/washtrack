@@ -68,7 +68,7 @@ erDiagram
 | --- | --- | --- | --- | --- | --- | --- |
 | Super admins can read all reports | SELECT | authenticated | `is_super_admin(auth.uid())` |  | `is_super_admin` | `20260313014212_8a0207b7-bd1b-4f31-b5c6-f2fcacb6b034.sql` |
 | Super admins can update reports | UPDATE | authenticated | `is_super_admin(auth.uid())` |  | `is_super_admin` | `20260313014212_8a0207b7-bd1b-4f31-b5c6-f2fcacb6b034.sql` |
-| Users can insert own reports | INSERT | authenticated | `` | `auth.uid() = reported_by` |  | `20260313014212_8a0207b7-bd1b-4f31-b5c6-f2fcacb6b034.sql` |
+| Users can insert own reports | INSERT | authenticated |  | `auth.uid() = reported_by` |  | `20260313014212_8a0207b7-bd1b-4f31-b5c6-f2fcacb6b034.sql` |
 | Users can read own reports | SELECT | authenticated | `auth.uid() = reported_by` |  |  | `20260313014212_8a0207b7-bd1b-4f31-b5c6-f2fcacb6b034.sql` |
 
 ## Used by SQL

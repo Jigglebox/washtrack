@@ -47,7 +47,7 @@ erDiagram
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 | All authenticated users can read audit trail | SELECT | public | `true` |  |  | `20251011054150_29aaf8ff-e3c9-445f-8d01-bdf978d62c52.sql` |
-| System can insert audit records | INSERT | public | `` | `true` |  | `20251011054150_29aaf8ff-e3c9-445f-8d01-bdf978d62c52.sql` |
+| System can insert audit records | INSERT | public |  | `true` |  | `20251011054150_29aaf8ff-e3c9-445f-8d01-bdf978d62c52.sql` |
 
 ## Used by SQL
 

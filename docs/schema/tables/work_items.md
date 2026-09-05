@@ -50,7 +50,7 @@ erDiagram
 
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Employees can insert work_items | INSERT | public | `` | `EXISTS ( SELECT 1 FROM rate_configs rc JOIN user_locations ul ON ul.location_id = rc.location_id WHERE rc.id = work_ite…` |  | `20251228061250_a4720166-45c5-4a95-b201-66363456cf66.sql` |
+| Employees can insert work_items | INSERT | public |  | `EXISTS ( SELECT 1 FROM rate_configs rc JOIN user_locations ul ON ul.location_id = rc.location_id WHERE rc.id = work_ite…` |  | `20251228061250_a4720166-45c5-4a95-b201-66363456cf66.sql` |
 | Employees can view assigned work_items | SELECT | public | `EXISTS ( SELECT 1 FROM rate_configs rc JOIN user_locations ul ON ul.location_id = rc.location_id WHERE rc.id = work_ite…` |  |  | `20251228061250_a4720166-45c5-4a95-b201-66363456cf66.sql` |
 | Finance and admins can manage work_items | ALL | public | `has_role_or_higher(auth.uid(), 'finance'::app_role)` | `has_role_or_higher(auth.uid(), 'finance'::app_role)` | `has_role_or_higher` | `20260108203209_c88d0e0a-5752-4578-8d40-2a7eb45622e2.sql` |
 | Finance can view work_items | SELECT | public | `has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20251228061250_a4720166-45c5-4a95-b201-66363456cf66.sql` |

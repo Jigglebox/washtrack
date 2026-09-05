@@ -65,7 +65,7 @@ erDiagram
 
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Employees can insert their own comments | INSERT | public | `` | `auth.uid() = employee_id` |  | `20251217031039_086af497-57d4-4e77-8026-d4bb66ec130a.sql` |
+| Employees can insert their own comments | INSERT | public |  | `auth.uid() = employee_id` |  | `20251217031039_086af497-57d4-4e77-8026-d4bb66ec130a.sql` |
 | Employees can view their own comments | SELECT | public | `auth.uid() = employee_id` |  |  | `20251217031039_086af497-57d4-4e77-8026-d4bb66ec130a.sql` |
 | Finance and admin can view all comments | SELECT | public | `has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20251217031039_086af497-57d4-4e77-8026-d4bb66ec130a.sql` |
 | Recipients can view comments addressed to them | SELECT | authenticated | `auth.uid() = recipient_id` |  |  | `20260622204626_3f53ed03-431a-4cfe-b447-e25d0cba1298.sql` |

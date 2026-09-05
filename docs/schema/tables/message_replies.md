@@ -44,9 +44,9 @@ erDiagram
 
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Comment authors can reply to their own conversation | INSERT | authenticated | `` | `auth.uid() = user_id AND EXISTS (SELECT 1 FROM public.employee_comments ec WHERE ec.id = message_replies.comment_id AND…` |  | `20260624231142_c6f1b880-4b52-4314-aff7-504efcba81aa.sql` |
+| Comment authors can reply to their own conversation | INSERT | authenticated |  | `auth.uid() = user_id AND EXISTS (SELECT 1 FROM public.employee_comments ec WHERE ec.id = message_replies.comment_id AND…` |  | `20260624231142_c6f1b880-4b52-4314-aff7-504efcba81aa.sql` |
 | Employees can view replies to their comments | SELECT | public | `EXISTS ( SELECT 1 FROM employee_comments ec WHERE ec.id = comment_id AND ec.employee_id = auth.uid() )` |  |  | `20251217032444_4cf9552a-2788-4f9d-ba32-6be214171a9c.sql` |
-| Finance and admin can insert replies | INSERT | public | `` | `has_role_or_higher(auth.uid(), 'finance'::app_role)` | `has_role_or_higher` | `20251217032444_4cf9552a-2788-4f9d-ba32-6be214171a9c.sql` |
+| Finance and admin can insert replies | INSERT | public |  | `has_role_or_higher(auth.uid(), 'finance'::app_role)` | `has_role_or_higher` | `20251217032444_4cf9552a-2788-4f9d-ba32-6be214171a9c.sql` |
 | Finance and admin can view all replies | SELECT | public | `has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20251217032444_4cf9552a-2788-4f9d-ba32-6be214171a9c.sql` |
 
 ## Used by code

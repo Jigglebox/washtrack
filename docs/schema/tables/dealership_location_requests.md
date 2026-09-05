@@ -76,7 +76,7 @@ erDiagram
 | --- | --- | --- | --- | --- | --- | --- |
 | Admin delete requests | DELETE | authenticated | `public.has_role_or_higher(auth.uid(), 'admin'::app_role)` |  | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
 | Finance+ review requests | UPDATE | authenticated | `public.has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
-| Users create their own requests | INSERT | authenticated | `` | `requested_by = auth.uid()` |  | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
+| Users create their own requests | INSERT | authenticated |  | `requested_by = auth.uid()` |  | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
 | Users view own requests; finance+ all | SELECT | authenticated | `requested_by = auth.uid() OR public.has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20260618054621_0b47f4fa-4cea-4f03-92ac-680a88e98bc8.sql` |
 
 ## Triggers

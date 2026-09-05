@@ -9,6 +9,8 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { buildGraph } from './analyze.ts';
+import { diffLive, fetchLive } from './live-db.ts';
+import type { LiveInfo } from './model.ts';
 import { scanCode } from './parse-code.ts';
 import { replayMigrations } from './parse-sql.ts';
 import { parseTypesFile } from './parse-types.ts';
@@ -42,6 +44,8 @@ Options:
   --src <dir>          default: src
   --hub-ratio <0..1>   fraction of tables that must reference a table for it to be a hub (default 0.25)
   --min-hub-degree <n> minimum referencing tables for a hub (default 4)
+  --db <url>           read the live database (or set SUPABASE_DB_URL / DATABASE_URL); read-only
+  --no-db              ignore SUPABASE_DB_URL / DATABASE_URL
   --check              do not write; exit 1 if the output dir is out of date
   --quiet              no summary`);
   process.exit(0);
@@ -54,14 +58,36 @@ const migDir = resolve(root, String(args.migrations ?? 'supabase/migrations'));
 const fnDir = resolve(root, String(args.functions ?? 'supabase/functions'));
 const srcDir = resolve(root, String(args.src ?? 'src'));
 
-if (!existsSync(typesPath)) { console.error(`schema-map: types file not found: ${typesPath}`); process.exit(2); }
+const dbUrl = args['no-db'] ? undefined : (typeof args.db === 'string' ? args.db : undefined) ?? process.env.SUPABASE_DB_URL ?? process.env.DATABASE_URL;
+if (!existsSync(typesPath) && !dbUrl) { console.error(`schema-map: types file not found: ${typesPath} (and no --db / SUPABASE_DB_URL given)`); process.exit(2); }
 
 let projectName = String(args.name ?? basename(root));
 
-const types = parseTypesFile(typesPath);
-const mig = replayMigrations(migDir);
+const staticTypes = existsSync(typesPath) ? parseTypesFile(typesPath) : null;
+const staticMig = replayMigrations(migDir);
 const codeRefs = scanCode(root, fnDir, srcDir);
-const graph = buildGraph(types, mig, codeRefs, { hubRatio: Number(args['hub-ratio'] ?? 0.25), minHubDegree: Number(args['min-hub-degree'] ?? 4) });
+
+let live: LiveInfo = { connected: false };
+let types = staticTypes;
+let mig = staticMig;
+let liveSnapshot;
+let extraWarnings: string[] = [];
+if (dbUrl) {
+  try {
+    liveSnapshot = await fetchLive(dbUrl);
+    live = { connected: true, host: liveSnapshot.host, database: liveSnapshot.database, serverVersion: liveSnapshot.serverVersion };
+    types = liveSnapshot.types;
+    mig = liveSnapshot.mig;
+    extraWarnings = diffLive(liveSnapshot, staticTypes, staticMig);
+    if (!args.quiet) console.log(`schema-map: read live schema from ${liveSnapshot.host}/${liveSnapshot.database} (${liveSnapshot.serverVersion}), ${extraWarnings.length} differences vs repo`);
+  } catch (e) {
+    const msg = (e as Error).message.replace(/\/\/[^@]*@/g, '//***@');
+    live = { connected: false, error: msg };
+    console.error(`schema-map: live database unavailable, falling back to repo sources: ${msg}`);
+    if (!types) { console.error('schema-map: no types.ts either; nothing to map'); process.exit(3); }
+  }
+}
+const graph = buildGraph(types!, mig, codeRefs, { hubRatio: Number(args['hub-ratio'] ?? 0.25), minHubDegree: Number(args['min-hub-degree'] ?? 4) }, { staticMig, live, liveSnapshot, extraWarnings });
 const files = renderDocs(graph, projectName);
 
 // Keep output byte-stable across runs on the same inputs: the timestamp only changes when content changes.

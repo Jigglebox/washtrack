@@ -58,7 +58,7 @@ erDiagram
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 | Admins can manage work_logs | ALL | public | `has_role(auth.uid(), 'admin'::app_role)` | `has_role(auth.uid(), 'admin'::app_role)` | `has_role` | `20251228042616_f79cb89f-5d54-49ad-b578-1998519041dd.sql` |
-| Employees can insert work_logs | INSERT | public | `` | `employee_id = auth.uid() AND ( (work_item_id IS NOT NULL AND EXISTS ( SELECT 1 FROM work_items wi JOIN rate_configs rc …` |  | `20251228061250_a4720166-45c5-4a95-b201-66363456cf66.sql` |
+| Employees can insert work_logs | INSERT | public |  | `employee_id = auth.uid() AND ( (work_item_id IS NOT NULL AND EXISTS ( SELECT 1 FROM work_items wi JOIN rate_configs rc …` |  | `20251228061250_a4720166-45c5-4a95-b201-66363456cf66.sql` |
 | Employees can view work_logs at assigned locations | SELECT | public | `employee_id = auth.uid() OR EXISTS ( SELECT 1 FROM work_items wi JOIN rate_configs rc ON rc.id = wi.rate_config_id JOIN…` |  |  | `20251229212813_9848c162-71d8-4948-b181-dfe7c391e6f5.sql` |
 | Finance can view work_logs | SELECT | public | `has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20251228042616_f79cb89f-5d54-49ad-b578-1998519041dd.sql` |
 

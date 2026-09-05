@@ -24,8 +24,14 @@ export type Table = {
   isHub: boolean;
   /** Distinct tables that reference this one (declared FKs only) */
   inboundDegree: number;
-  /** Where we learned about it (types.ts, migration file, or both) */
+  /** Where we learned about it (types.ts, migration file, live database) */
   sources: string[];
+  /** Live database only: n_live_tup (or reltuples) estimate */
+  rowCount?: number;
+  /** Views, live database only */
+  viewDefinition?: string;
+  viewTables?: string[];
+  comment?: string;
 };
 
 export type RelationshipKind = 'declared' | 'inferred' | 'junction' | 'external';
@@ -103,8 +109,11 @@ export type Cluster = {
 
 export type EnumType = { name: string; values: string[] };
 
+export type LiveInfo = { connected: boolean; host?: string; database?: string; serverVersion?: string; error?: string };
+
 export type SchemaGraph = {
   generatedAt: string;
+  live: LiveInfo;
   tables: Table[];
   relationships: Relationship[];
   policies: Policy[];

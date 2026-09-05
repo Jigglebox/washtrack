@@ -1,5 +1,8 @@
 {
-  "generatedAt": "2026-09-05T21:48:15.133Z",
+  "generatedAt": "2026-09-05T23:14:03.405Z",
+  "live": {
+    "connected": false
+  },
   "tables": [
     {
       "name": "activity_logs",

@@ -192,9 +192,9 @@ erDiagram
 
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Admin can insert users | INSERT | public | `` | `public.has_role(auth.uid(), 'admin'::app_role)` | `has_role` | `20251011030116_d0a26d5e-5ff4-4bd6-bb5b-dbf50e5222c4.sql` |
+| Admin can insert users | INSERT | public |  | `public.has_role(auth.uid(), 'admin'::app_role)` | `has_role` | `20251011030116_d0a26d5e-5ff4-4bd6-bb5b-dbf50e5222c4.sql` |
 | Admin can update users | UPDATE | public | `public.has_role(auth.uid(), 'admin'::app_role)` |  | `has_role` | `20251011030116_d0a26d5e-5ff4-4bd6-bb5b-dbf50e5222c4.sql` |
-| Finance can insert users | INSERT | public | `` | `has_role_or_higher(auth.uid(), 'finance'::app_role) AND role NOT IN ('admin', 'super_admin')` | `has_role_or_higher` | `20260108203623_134f6ee5-c617-44a6-82ad-e0269ebb7204.sql` |
+| Finance can insert users | INSERT | public |  | `has_role_or_higher(auth.uid(), 'finance'::app_role) AND role NOT IN ('admin', 'super_admin')` | `has_role_or_higher` | `20260108203623_134f6ee5-c617-44a6-82ad-e0269ebb7204.sql` |
 | Finance can read users | SELECT | public | `has_role_or_higher(auth.uid(), 'finance'::app_role) AND ( has_role(auth.uid(), 'super_admin'::app_role) OR NOT EXISTS (…` |  | `has_role_or_higher`, `has_role` | `20260108203623_134f6ee5-c617-44a6-82ad-e0269ebb7204.sql` |
 | Finance can update lower-role users | UPDATE | public | `has_role_or_higher(auth.uid(), 'finance'::app_role) AND NOT EXISTS ( SELECT 1 FROM user_roles ur WHERE ur.user_id = use…` |  | `has_role_or_higher` | `20260108203623_134f6ee5-c617-44a6-82ad-e0269ebb7204.sql` |
 | Users can read their own record | SELECT | public | `auth.uid() = id` |  |  | `20251215185716_c092f9a9-4a97-436d-a57b-9796f3bd06a9.sql` |

@@ -41,7 +41,7 @@ erDiagram
 
 | Policy | Command | Roles | Using | With check | Calls | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Users insert their own ticket view marker | INSERT | authenticated | `` | `user_id = auth.uid()` |  | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
+| Users insert their own ticket view marker | INSERT | authenticated |  | `user_id = auth.uid()` |  | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
 | Users manage their own ticket view marker | SELECT | authenticated | `user_id = auth.uid()` |  |  | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
 | Users update their own ticket view marker | UPDATE | authenticated | `user_id = auth.uid()` | `user_id = auth.uid()` |  | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
 
