@@ -82,7 +82,7 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
 .legend b { width: 9px; height: 9px; border-radius: 50%; background: var(--auto); display: inline-block; }
 
 /* svg */
-.link { fill: none; stroke: var(--line-strong); stroke-width: 1.5; transition: opacity .15s, stroke .15s; }
+.link { fill: none; stroke: var(--line-strong); stroke-width: 1.5; transition: opacity .15s, stroke .15s; vector-effect: non-scaling-stroke; }
 .link.loose { stroke: var(--loose); stroke-dasharray: 5 4; }
 .link.knot { stroke: var(--accent); stroke-width: 3; }
 .link.grouplink { stroke-width: var(--w, 2); }
@@ -96,12 +96,12 @@ svg.pannable { cursor: grab; }
 svg.pannable.panning { cursor: grabbing; }
 svg .bg { fill: transparent; }
 .node.dragging rect { filter: drop-shadow(0 6px 12px rgba(0,0,0,.18)); }
-.node rect { fill: var(--surface); stroke: var(--gc); stroke-width: 1.5; rx: 9; transition: stroke-width .15s; }
+.node rect { fill: var(--surface); stroke: var(--gc); stroke-width: 1.5; rx: 9; transition: stroke-width .15s; vector-effect: non-scaling-stroke; }
 .node.stub rect { fill: var(--ground); stroke-dasharray: 3 3; }
 .node.hub rect { stroke-width: 2.5; }
 .node.selected rect { stroke: var(--accent); stroke-width: 3; fill: var(--surface); }
 .node.neigh rect { stroke-width: 2.5; }
-.node text { font-family: var(--font-display); font-size: 13px; font-weight: 600; fill: var(--ink); pointer-events: none; }
+.node text { font-family: var(--font-display); font-size: 14px; font-weight: 600; fill: var(--ink); pointer-events: none; }
 .node text.sub { font-family: var(--font-body); font-weight: 400; font-size: 11px; fill: var(--muted); }
 .node .badge { fill: var(--auto); }
 .node .flag { fill: var(--warn); }
@@ -112,7 +112,7 @@ svg .bg { fill: transparent; }
 .note button { all: unset; cursor: pointer; color: var(--accent); text-decoration: underline; }
 .node.groupnode rect { fill: var(--surface); stroke-width: 2; }
 .node.groupnode .fill { fill: var(--gc); opacity: .12; stroke: none; }
-.node.groupnode text.title { font-size: 15px; }
+.node.groupnode text.title { font-size: 16px; }
 .edgelabel { font-family: var(--font-body); font-size: 11px; fill: var(--muted); pointer-events: none; }
 .edgelabel-bg { fill: var(--ground); }
 .tooltip { position: absolute; pointer-events: none; background: var(--ink); color: var(--ground); padding: 7px 10px; border-radius: 8px; font-size: 13px; max-width: 320px; z-index: 5; box-shadow: var(--shadow); display: none; }
@@ -211,7 +211,7 @@ svg .bg { fill: transparent; }
     <div class="canvas" id="canvas">
       <div class="crumbs" id="crumbs"></div>
       <div class="tools"><button id="btn-tidy" title="Forget the positions you dragged and lay this view out again with as few crossing lines as possible">Tidy up</button><button id="btn-all" aria-pressed="false">Show every table</button></div>
-      <div class="hint">Drag a box to move it, drag the empty background to move around, scroll to zoom, double-click the background to recenter. Your arrangement is remembered on this device.</div>
+      <div class="hint">Drag a box to move it, drag the empty background to move around, scroll to zoom, double-click the background to fit everything on screen. Your arrangement is remembered on this device.</div>
       <svg id="svg" role="img" aria-label="Map of database tables and their connections"></svg>
       <div class="legend"><span><i></i> belongs to</span><span><i class="dash"></i> loose link</span><span><i class="knot"></i> any combination</span><span><b></b> automatic action</span></div>
       <div class="tooltip" id="tip"></div>
@@ -349,14 +349,26 @@ function installPanZoom(svgEl) {
     const u = unit(); const r = svgEl.getBoundingClientRect();
     const mx = (ev.clientX - r.left) * u, my = (ev.clientY - r.top) * u; // cursor in viewBox units
     const factor = Math.exp(-(ev.deltaMode === 1 ? ev.deltaY * 20 : ev.deltaY) * (ev.ctrlKey ? 0.01 : 0.0015));
-    const k2 = Math.max(0.35, Math.min(3, v.k * factor));
+    const k2 = Math.max(0.2, Math.min(3, v.k * factor));
     // keep the point under the cursor fixed
     v.x = mx - (mx - v.x) * (k2 / v.k); v.y = my - (my - v.y) * (k2 / v.k); v.k = k2;
     applyView(svgEl);
   }, { passive: false });
-  svgEl.addEventListener('dblclick', (ev) => { if (ev.target.closest && ev.target.closest('.node')) return; resetView(svgEl); });
+  svgEl.addEventListener('dblclick', (ev) => { if (ev.target.closest && ev.target.closest('.node')) return; if (svgEl === svg) { state.refit = true; render(); } else resetView(svgEl); });
 }
 function applyView(svgEl) { const v = svgEl.__view; const vp = svgEl.querySelector('.viewport'); if (vp) vp.setAttribute('transform', `translate(${v.x} ${v.y}) scale(${v.k})`); }
+/** Zoom out (never in) and centre so every box is on screen, with a little margin. */
+function fitView(svgEl, nodes, pos, W, H, m = { top: 64, bottom: 56, side: 30 }) {
+  let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+  for (const n of nodes) { const p = pos.get(n.id); if (!p) continue; minx = Math.min(minx, p.x - n.w / 2); maxx = Math.max(maxx, p.x + n.w / 2); miny = Math.min(miny, p.y - n.h / 2); maxy = Math.max(maxy, p.y + n.h / 2); }
+  if (!isFinite(minx)) return resetView(svgEl);
+  // The crumbs, tool buttons and hint float over the top and bottom of the canvas; keep boxes out from under them.
+  const availW = W - m.side * 2, availH = H - m.top - m.bottom;
+  const k = Math.min(1, availW / (maxx - minx), availH / (maxy - miny));
+  const v = svgEl.__view || (svgEl.__view = { x: 0, y: 0, k: 1 });
+  v.k = k; v.x = m.side + (availW - (maxx - minx) * k) / 2 - minx * k; v.y = m.top + (availH - (maxy - miny) * k) / 2 - miny * k;
+  applyView(svgEl);
+}
 function resetView(svgEl) { if (!svgEl.__view) svgEl.__view = { x: 0, y: 0, k: 1 }; Object.assign(svgEl.__view, { x: 0, y: 0, k: 1 }); applyView(svgEl); }
 /** A fresh drawing surface: transparent background (catches drags) plus a transformable viewport. */
 function freshSurface(svgEl, W, H) {
@@ -447,8 +459,27 @@ function countCrossings(edges, pos) {
 }
 function untangle(nodes, edges, pos, W, H, opts = {}) {
   const ids = nodes.map((n) => n.id).filter((id) => pos.has(id));
-  const size = new Map(nodes.map((n) => [n.id, { w: (n.w || 110) + 30, h: (n.h || 40) + 30 }]));
+  const size = new Map(nodes.map((n) => [n.id, { w: (n.w || 110) + 70, h: (n.h || 40) + 56 }]));
   const es = edges.filter((e) => pos.has(e.a) && pos.has(e.b) && e.a !== e.b);
+  // does segment p->q pass through the box around node id? (Liang-Barsky clip)
+  const throughBox = (p, q, id) => {
+    const c = pos.get(id), sz = size.get(id);
+    const x0 = c.x - sz.w / 2, x1 = c.x + sz.w / 2, y0 = c.y - sz.h / 2, y1 = c.y + sz.h / 2;
+    const dx = q.x - p.x, dy = q.y - p.y;
+    let t0 = 0, t1 = 1;
+    for (const [pp, qq] of [[-dx, p.x - x0], [dx, x1 - p.x], [-dy, p.y - y0], [dy, y1 - p.y]]) {
+      if (pp === 0) { if (qq < 0) return false; continue; }
+      const t = qq / pp;
+      if (pp < 0) { if (t > t1) return false; if (t > t0) t0 = t; }
+      else { if (t < t0) return false; if (t < t1) t1 = t; }
+    }
+    return t0 < t1;
+  };
+  const linesThroughBoxes = () => {
+    let n = 0;
+    for (const e of es) { const pa = pos.get(e.a), pb = pos.get(e.b); for (const id of ids) if (id !== e.a && id !== e.b && throughBox(pa, pb, id)) n++; }
+    return n;
+  };
   const nb = new Map(ids.map((id) => [id, []]));
   for (const e of es) { nb.get(e.a).push(e.b); nb.get(e.b).push(e.a); }
   const rnd = seeded(ids.length * 131 + 7);
@@ -462,8 +493,8 @@ function untangle(nodes, edges, pos, W, H, opts = {}) {
     return a;
   };
   const edgeLength = () => es.reduce((t, e) => t + Math.hypot(pos.get(e.a).x - pos.get(e.b).x, pos.get(e.a).y - pos.get(e.b).y), 0);
-  // Crossings dominate; then overlap; then shorter lines.
-  const score = () => countCrossings(es, pos) * 1e6 + overlapArea() * 40 + edgeLength();
+  // Crossings dominate; then lines cutting through boxes; then overlap; then shorter lines.
+  const score = () => countCrossings(es, pos) * 1e6 + linesThroughBoxes() * 2e5 + overlapArea() * 40 + edgeLength();
   let best = score();
 
   // Phase 1: swap the positions of two boxes whenever that removes crossings.
@@ -505,7 +536,7 @@ function untangle(nodes, edges, pos, W, H, opts = {}) {
   return { crossings: countCrossings(es, pos) };
 }
 function separate(nodes, pos, W, H) {
-  const size = new Map(nodes.map((n) => [n.id, { w: (n.w || 110) + 26, h: (n.h || 40) + 26 }]));
+  const size = new Map(nodes.map((n) => [n.id, { w: (n.w || 110) + 60, h: (n.h || 40) + 48 }]));
   for (let it = 0; it < 80; it++) {
     let moved = false;
     for (const a of nodes) for (const b of nodes) {
@@ -521,6 +552,16 @@ function separate(nodes, pos, W, H) {
     if (!moved) break;
   }
 }
+/** Uniformly stretch an arrangement so it fills the plane (only ever enlarges, so crossings cannot appear). */
+function expandToFill(nodes, pos, W, H, pad) {
+  const ps = nodes.map((n) => pos.get(n.id)).filter(Boolean);
+  if (ps.length < 2) return;
+  const minx = Math.min(...ps.map((p) => p.x)), maxx = Math.max(...ps.map((p) => p.x)), miny = Math.min(...ps.map((p) => p.y)), maxy = Math.max(...ps.map((p) => p.y));
+  const bw = Math.max(1, maxx - minx), bh = Math.max(1, maxy - miny);
+  const sc = Math.max(1, Math.min((W - 2 * pad) / bw, (H - 2 * pad) / bh));
+  const cx = (minx + maxx) / 2, cy = (miny + maxy) / 2;
+  for (const p of ps) { p.x = W / 2 + (p.x - cx) * sc; p.y = H / 2 + (p.y - cy) * sc; }
+}
 /** Try a couple of starting arrangements, untangle each, keep the one with the fewest crossings. */
 function bestLayout(nodes, edges, W, H, opts = {}) {
   const seeds = nodes.length > 20 ? [0, 11, 23, 37] : [0, 11];
@@ -530,6 +571,8 @@ function bestLayout(nodes, edges, W, H, opts = {}) {
   for (const start of starts) {
     const pos = start();
     const r = untangle(nodes, edges, pos, W, H, opts);
+    expandToFill(nodes, pos, W, H, opts.pad || 90);
+    separate(nodes, pos, W, H);
     const len = edges.reduce((t, e) => (pos.has(e.a) && pos.has(e.b)) ? t + Math.hypot(pos.get(e.a).x - pos.get(e.b).x, pos.get(e.a).y - pos.get(e.b).y) : t, 0);
     const sc = r.crossings * 1e6 + len;
     if (sc < bestScore) { bestScore = sc; bestPos = pos; }
@@ -557,8 +600,12 @@ let lastViewKey = null;
 function render() {
   const box = svg.getBoundingClientRect(); const W = Math.max(600, box.width), H = Math.max(420, box.height);
   const viewKey = `${state.level}|${state.group || ''}`;
-  if (viewKey !== lastViewKey) { lastViewKey = viewKey; resetView(svg); }
+  const freshView = viewKey !== lastViewKey || state.refit;
+  lastViewKey = viewKey; state.refit = false;
   const vp = freshSurface(svg, W, H);
+  // Lay out on a plane larger than the screen so lines have room, then zoom out to fit.
+  const spread = state.level === 'all' ? 2.4 : 1.5;
+  const LW = W * spread, LH = H * spread;
   let nodes, edges;
   if (state.level === 'groups') {
     nodes = groups.map((g) => ({ id: g.name, title: g.label, sub: `${g.tables.length} table${g.tables.length === 1 ? '' : 's'}`, group: g.name, kind: 'group', w: Math.max(150, g.label.length * 9 + 40), h: 54 }));
@@ -591,10 +638,11 @@ function render() {
   }
   current = { nodes, edges };
   const simple = edges.map((e) => ({ a: e.a, b: e.b, w: e.kind === 'grouplink' ? 1 + Math.log(e.n) : 1, len: e.kind === 'grouplink' ? 1.3 : 1 }));
-  const pos = bestLayout(nodes, simple, W, H, { pad: state.level === 'groups' ? 110 : 80, seed: state.level === 'groups' ? 3 : 5, effort: nodes.length > 20 ? 2 : 1 });
+  const pos = bestLayout(nodes, simple, LW, LH, { pad: state.level === 'groups' ? 110 : 80, seed: state.level === 'groups' ? 3 : 5, effort: nodes.length > 20 ? 1 : 2 });
   current.pos = pos;
   const storeKey = store.key();
-  applySaved(pos, W, H, storeKey);
+  applySaved(pos, LW, LH, storeKey);
+  if (freshView) fitView(svg, nodes, pos, W, H);
   const geometry = () => {
     for (const e of edges) { if (!e.path) continue; const pa = pos.get(e.a), pb = pos.get(e.b); const d = edgePath(pa, pb, e.a, e.b, e.curve); e.path.setAttribute('d', d); e.hit.setAttribute('d', d); if (e.labelBg) { const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2; e.labelBg.setAttribute('x', mx - 9); e.labelBg.setAttribute('y', my - 8); e.labelText.setAttribute('x', mx); e.labelText.setAttribute('y', my + 4); } }
     for (const n of nodes) if (n.el) { const p = pos.get(n.id); n.el.setAttribute('transform', `translate(${p.x - n.w / 2} ${p.y - n.h / 2})`); }
@@ -637,7 +685,7 @@ function render() {
     if (n.flag) g.append(el('circle', { cx: w - 11, cy: hh - 11, r: 4.5, class: 'flag' }));
     n.el = g; n.pos = p;
     const go = () => { if (n.kind === 'group') { state.level = 'group'; state.group = n.id; state.selected = null; render(); renderPanel(); renderRail(); } else select(n.id); };
-    draggable(g, n.id, pos, svg, { onMove: geometry, onClick: go, onDrop: () => remember(n.id, pos.get(n.id), W, H, storeKey) });
+    draggable(g, n.id, pos, svg, { onMove: geometry, onClick: go, onDrop: () => remember(n.id, pos.get(n.id), LW, LH, storeKey) });
     g.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
     g.addEventListener('mousemove', (ev) => { const t = tables.get(n.id); showTip(n.kind === 'group' ? (groups.find((x) => x.name === n.id).what || n.title) : (t?.what || n.title), ev.clientX, ev.clientY); });
     g.addEventListener('mouseleave', hideTip);
@@ -648,7 +696,7 @@ function render() {
   renderCrumbs();
   $('#btn-all').setAttribute('aria-pressed', String(state.level === 'all'));
 }
-$('#btn-tidy').addEventListener('click', () => { store.clear(store.key()); resetView(svg); render(); });
+$('#btn-tidy').addEventListener('click', () => { store.clear(store.key()); state.refit = true; render(); });
 function applyHighlight() {
   const sel = state.selected;
   const neigh = new Set();
