@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>__TITLE__</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -224,7 +226,16 @@ svg .bg { fill: transparent; }
 @media (max-width: 980px) {
   .app { height: auto; min-height: 100vh; }
   #view-map, #view-map.no-rail, #view-map.no-panel, #view-map.no-rail.no-panel { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-rows: auto; }
-  #view-map .canvas { min-height: 60vh; }
+  #view-map .canvas { height: 62vh; min-height: 380px; }
+  .filters { left: 12px; right: 12px; width: auto; max-width: none; max-height: 55%; bottom: 12px; }
+  .filters.collapsed { left: auto; right: 12px; max-width: calc(100% - 24px); }
+  .canvas .hint { display: none; }
+  .topbar { flex-wrap: wrap; gap: 8px 10px; padding: 8px 12px; }
+  .topbar h1 { font-size: 16px; }
+  .topbar h1 small { display: none; }
+  .topbar .edge-toggle.right { margin-left: auto; }
+  .tabs { order: 3; width: 100%; margin-left: 0; }
+  .tabs button { flex: 1; padding: 6px 6px; font-size: 12px; text-align: center; white-space: nowrap; }
   #view-flows { grid-template-columns: 1fr; }
   .rail { border-right: 0; border-bottom: 1px solid var(--line); max-height: 220px; }
   .panel { border-left: 0; border-top: 1px solid var(--line); }
@@ -236,6 +247,8 @@ svg .bg { fill: transparent; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
+<noscript><div style="margin:12px 18px;padding:12px 14px;border-radius:10px;background:#FBEBD3;color:#5a3a0a;font:14px/1.45 -apple-system,system-ui,sans-serif">This map is drawn by a small script inside the file, and this viewer has scripts switched off. Open the file in Safari or Chrome (from a message preview, use the share button and choose the browser).</div></noscript>
+<div id="fatal" hidden style="margin:12px 18px;padding:12px 14px;border-radius:10px;background:#FBEBD3;color:#5a3a0a;font:14px/1.45 -apple-system,system-ui,sans-serif"></div>
 <div class="app">
   <header class="topbar">
     <button class="edge-toggle left" id="toggle-rail" aria-pressed="false" title="Hide or show the list of groups and tables" aria-label="Toggle the table list"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2.5"/><rect class="pane" x="1.5" y="2.5" width="5" height="11" rx="2.5"/><line x1="6.5" y1="2.5" x2="6.5" y2="13.5"/></svg></button>
@@ -277,6 +290,13 @@ svg .bg { fill: transparent; }
   </section>
 </div>
 
+<script>
+window.addEventListener('error', function (e) {
+  var box = document.getElementById('fatal'); if (!box) return;
+  box.hidden = false;
+  box.textContent = 'The map could not start in this browser. Try Safari or Chrome, or a newer version. Details: ' + (e.message || 'unknown error');
+});
+</script>
 <script>
 const DATA = /*__DATA__*/{};
 (() => {
@@ -654,7 +674,7 @@ state.filter = new Set();
 const swatch = (k) => { const svg = el('svg', { viewBox: '0 0 30 8', class: 'sw' }); svg.append(el('line', { x1: 1, y1: 4, x2: 29, y2: 4, 'stroke-dasharray': k.dash || 'none', 'stroke-linecap': k.dash === '2 4' ? 'round' : 'butt' })); return svg; };
 function renderFilters() {
   const bar = $('#filters'); bar.innerHTML = '';
-  if (state.filtersCollapsed === undefined) state.filtersCollapsed = !!store.load('wt-filters').collapsed;
+  if (state.filtersCollapsed === undefined) { const saved = store.load('wt-filters'); state.filtersCollapsed = 'collapsed' in saved ? !!saved.collapsed : innerWidth < 760; }
   const collapsed = state.filtersCollapsed;
   bar.classList.toggle('collapsed', collapsed);
   const counts = new Map();
@@ -667,7 +687,7 @@ function renderFilters() {
   for (const k of KINDS) {
     const n = counts.get(k.id) || 0;
     const b = h('button', { class: 'chip', 'aria-pressed': String(state.filter.has(k.id)), title: k.what, onclick: () => { if (state.filter.has(k.id)) state.filter.delete(k.id); else state.filter.add(k.id); renderFilters(); applyHighlight(); } },
-      swatch(k), h('span', { class: 'name' }, k.label), h('span', { class: 'count' }, n ? `${n} on this map` : 'none here'));
+      swatch(k), h('span', { class: 'name' }, k.label), h('span', { class: 'count' }, collapsed ? String(n) : (n ? `${n} on this map` : 'none here')));
     if (!collapsed) b.append(h('small', {}, k.what));
     b.style.setProperty('--kc', `var(--c-${k.id})`);
     if (!n) { b.disabled = true; b.classList.add('none'); }
@@ -860,7 +880,7 @@ function renderPanel() {
     if (g) {
       ov.append(h('div', { class: 'eyebrow' }, 'Group'), h('h2', {}, g.label), h('p', { class: 'what' }, g.what || ''), h('div', { class: 'eyebrow' }, 'Tables in this group'));
       const list = h('div', { class: 'groups' });
-      for (const tn of g.tables) { const t = tables.get(tn); const b = h('button', { onclick: () => select(tn) }, h('span', { class: 'dot' }), h('span', {}, h('b', {}, t.label), h('br'), h('small', {}, t.what ? t.what.split(/(?<=\.)\s/)[0] : '')), h('small', {}, t.rows != null ? t.rows.toLocaleString('en-US') + ' rows' : '')); b.style.setProperty('--gc', gcolor(g.name)); list.append(b); }
+      for (const tn of g.tables) { const t = tables.get(tn); const b = h('button', { onclick: () => select(tn) }, h('span', { class: 'dot' }), h('span', {}, h('b', {}, t.label), h('br'), h('small', {}, t.what ? (t.what.match(/^[^.]*\./) || [t.what])[0] : '')), h('small', {}, t.rows != null ? t.rows.toLocaleString('en-US') + ' rows' : '')); b.style.setProperty('--gc', gcolor(g.name)); list.append(b); }
       ov.append(list);
     } else {
       ov.append(h('div', { class: 'eyebrow' }, 'How to use this'), h('h2', {}, DATA.title), h('p', { class: 'what' }, DATA.intro), h('div', { class: 'eyebrow' }, 'Groups'));
