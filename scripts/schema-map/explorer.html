@@ -5,6 +5,7 @@
 :root {
   --ground: #F3F6F9; --surface: #FFFFFF; --surface-2: #E9EFF4; --ink: #16212B; --muted: #5B6B7A; --line: #D3DCE4; --line-strong: #AEBCC8;
   --accent: #0F8B8D; --accent-ink: #0B6E70; --accent-soft: #D9F0F0; --auto: #C7791A; --warn: #B8541A; --auto-soft: #FBEBD3; --loose: #8A9AA8;
+  --c-fk: #4A78B5; --c-knot: #0F8B8D; --c-loose: #8A9AA8; --c-policy: #9A4FA8; --c-auto: #C7791A; --c-group: #AEBCC8;
   --g0: #0F8B8D; --g1: #4C5FD6; --g2: #9A4FA8; --g3: #C7791A; --g4: #6B8E23; --g5: #C24A3A; --g6: #2E86C1; --g7: #C4457C; --g8: #5F7385; --g9: #2A9D6F; --g10: #8B6D2E; --g11: #4A7C9D;
   --shadow: 0 1px 2px rgba(22,33,43,.06), 0 6px 20px rgba(22,33,43,.08);
   --radius: 10px;
@@ -16,6 +17,7 @@
   :root:not([data-theme="light"]) {
     --ground: #0F171E; --surface: #16222C; --surface-2: #1D2B37; --ink: #E8EEF3; --muted: #93A3B1; --line: #263440; --line-strong: #3A4B59;
     --accent: #3FC1C3; --accent-ink: #7FDCDD; --accent-soft: #143B3C; --auto: #E9A23B; --warn: #E8895A; --auto-soft: #3E2E14; --loose: #6E7F8C;
+    --c-fk: #7FAEE0; --c-knot: #3FC1C3; --c-loose: #6E7F8C; --c-policy: #C58AD2; --c-auto: #E9A23B; --c-group: #4C5F70;
     --g0: #3FC1C3; --g1: #8C9AF0; --g2: #C58AD2; --g3: #E9A23B; --g4: #9DC24C; --g5: #E6796A; --g6: #63B3F0; --g7: #EE7FAE; --g8: #94A7B8; --g9: #52C795; --g10: #C9A65B; --g11: #7FB0D1;
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
   }
@@ -23,6 +25,7 @@
 :root[data-theme="dark"] {
   --ground: #0F171E; --surface: #16222C; --surface-2: #1D2B37; --ink: #E8EEF3; --muted: #93A3B1; --line: #263440; --line-strong: #3A4B59;
   --accent: #3FC1C3; --accent-ink: #7FDCDD; --accent-soft: #143B3C; --auto: #E9A23B; --warn: #E8895A; --auto-soft: #3E2E14; --loose: #6E7F8C;
+  --c-fk: #7FAEE0; --c-knot: #3FC1C3; --c-loose: #6E7F8C; --c-policy: #C58AD2; --c-auto: #E9A23B; --c-group: #4C5F70;
   --g0: #3FC1C3; --g1: #8C9AF0; --g2: #C58AD2; --g3: #E9A23B; --g4: #9DC24C; --g5: #E6796A; --g6: #63B3F0; --g7: #EE7FAE; --g8: #94A7B8; --g9: #52C795; --g10: #C9A65B; --g11: #7FB0D1;
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
 }
@@ -47,6 +50,8 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
 .view { display: none; min-height: 0; }
 .view.active { display: grid; }
 #view-map { grid-template-columns: 250px minmax(0, 1fr) 360px; }
+#view-map.focus { grid-template-columns: minmax(0, 1fr); }
+#view-map.focus .rail, #view-map.focus .panel { display: none; }
 #view-flows { grid-template-columns: 280px minmax(0, 1fr); }
 #view-words { grid-template-columns: minmax(0, 1fr); overflow: auto; }
 
@@ -83,13 +88,28 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
 
 /* svg */
 .link { fill: none; stroke: var(--line-strong); stroke-width: 1.5; transition: opacity .15s, stroke .15s; vector-effect: non-scaling-stroke; }
-.link.loose { stroke: var(--loose); stroke-dasharray: 5 4; }
-.link.knot { stroke: var(--accent); stroke-width: 3; }
-.link.grouplink { stroke-width: var(--w, 2); }
+.link.k-fk { stroke: var(--c-fk); }
+.link.k-loose { stroke: var(--c-loose); stroke-dasharray: 5 4; }
+.link.k-knot { stroke: var(--c-knot); stroke-width: 3; }
+.link.k-policy { stroke: var(--c-policy); stroke-dasharray: 2 4; stroke-linecap: round; stroke-width: 2; }
+.link.k-auto { stroke: var(--c-auto); stroke-dasharray: 10 5; stroke-width: 2; }
+.link.k-group { stroke: var(--c-group); stroke-width: var(--w, 2); }
 .link.hit { stroke: transparent; stroke-width: 14; cursor: pointer; }
-.link.lit { stroke: var(--accent); stroke-width: 2.5; }
-.link.lit.loose { stroke: var(--accent); }
+.link.lit { stroke-width: 3; filter: brightness(.85) saturate(1.3); }
+.link.bold { stroke-width: 4; }
+.link.k-knot.bold { stroke-width: 5; }
 .dim { opacity: .18; }
+.faded { opacity: .12; }
+/* filter bar */
+.filters { position: absolute; bottom: 12px; right: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; max-width: 70%; background: color-mix(in srgb, var(--surface) 92%, transparent); padding: 6px 8px; border-radius: 10px; box-shadow: var(--shadow); font-size: 12px; z-index: 2; }
+.filters .lbl { color: var(--muted); font-family: var(--font-display); font-weight: 600; margin-right: 2px; }
+.filters button.chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 600; font-family: var(--font-display); }
+.filters button.chip[aria-pressed="true"] { border-color: var(--kc); background: color-mix(in srgb, var(--kc) 16%, var(--surface)); box-shadow: inset 0 0 0 1px var(--kc); }
+.filters button.chip i { display: inline-block; width: 22px; border-top: 3px solid var(--kc); }
+.filters button.chip i.dash { border-top-style: dashed; }
+.filters button.chip i.dot { border-top-style: dotted; }
+.filters button.clear { color: var(--accent-ink); font-weight: 600; font-family: var(--font-display); padding: 4px 6px; }
+.filters .count { color: var(--muted); font-variant-numeric: tabular-nums; }
 .node { cursor: grab; }
 .node.dragging { cursor: grabbing; }
 svg.pannable { cursor: grab; }
@@ -182,6 +202,7 @@ svg .bg { fill: transparent; }
 @media (max-width: 980px) {
   .app { height: auto; min-height: 100vh; }
   #view-map { grid-template-columns: 1fr; grid-template-rows: auto 60vh auto; }
+  #view-map.focus { grid-template-rows: 80vh; }
   #view-flows { grid-template-columns: 1fr; }
   .rail { border-right: 0; border-bottom: 1px solid var(--line); max-height: 220px; }
   .panel { border-left: 0; border-top: 1px solid var(--line); }
@@ -210,10 +231,10 @@ svg .bg { fill: transparent; }
     </aside>
     <div class="canvas" id="canvas">
       <div class="crumbs" id="crumbs"></div>
-      <div class="tools"><button id="btn-tidy" title="Forget the positions you dragged and lay this view out again with as few crossing lines as possible">Tidy up</button><button id="btn-all" aria-pressed="false">Show every table</button></div>
+      <div class="tools"><button id="btn-focus" aria-pressed="false" title="Hide the side panels so the map gets the whole window">Hide panels</button><button id="btn-tidy" title="Forget the positions you dragged and lay this view out again with as few crossing lines as possible">Tidy up</button><button id="btn-all" aria-pressed="false">Show every table</button></div>
       <div class="hint">Drag a box to move it, drag the empty background to move around, scroll to zoom, double-click the background to fit everything on screen. Your arrangement is remembered on this device.</div>
       <svg id="svg" role="img" aria-label="Map of database tables and their connections"></svg>
-      <div class="legend"><span><i></i> belongs to</span><span><i class="dash"></i> loose link</span><span><i class="knot"></i> any combination</span><span><b></b> automatic action</span></div>
+      <div class="filters" id="filters" aria-label="Highlight connection types"></div>
       <div class="tooltip" id="tip"></div>
     </div>
     <aside class="panel" id="panel"></aside>
@@ -259,6 +280,8 @@ const col = (c) => human(c).replace(/ id$/, '');
 function phrase(l) {
   if (l.phrase) return l.phrase;
   const a = singular(l.from), b = singular(l.to), A = plural(l.from), B = plural(l.to);
+  if (l.kind === 'policy') { const n = l.rules.length; return `${n === 1 ? 'An access rule' : n + ' access rules'} on ${A} look${n === 1 ? 's' : ''} at ${B} to decide who may ${l.commands.map((c) => ({ ALL: 'do anything', SELECT: 'view', INSERT: 'add', UPDATE: 'change', DELETE: 'remove' }[c] || c.toLowerCase())).join(' or ')}: ${l.rules.map((r) => `“${r}”`).join(', ')}.`; }
+  if (l.kind === 'trigger') return `When a ${a} is ${l.events.map((e) => ({ INSERT: 'added', UPDATE: 'changed', DELETE: 'removed', TRUNCATE: 'cleared' }[e] || e.toLowerCase())).join(' or ')}, “${l.fns.map(human).join('” and “')}” runs on its own and writes to ${B}.`;
   if (l.kind === 'junction') return `${cap(A)} and ${B} can be linked in any combination. The link is stored in “${label(l.via)}”.`;
   if (l.from === l.to) return `A ${a} can point at another ${a} (its “${col(l.cols[0])}”).`;
   if (l.kind === 'inferred') return `A ${a} names a ${b} in its “${col(l.cols[0])}” field, but nothing checks that the ${b} exists. A loose link.`;
@@ -593,6 +616,32 @@ const tip = $('#tip');
 function showTip(text, x, y) { tip.textContent = text; tip.style.display = 'block'; const r = $('#canvas').getBoundingClientRect(); tip.style.left = Math.min(x - r.left + 14, r.width - 330) + 'px'; tip.style.top = (y - r.top + 14) + 'px'; }
 function hideTip() { tip.style.display = 'none'; }
 
+// ---- connection kinds
+const KINDS = [
+  { id: 'fk', label: 'Belongs to', swatch: '', what: 'A record on one end belongs to one record on the other, and the database enforces it.' },
+  { id: 'knot', label: 'Any combination', swatch: '', what: 'Two kinds of records paired freely through a linking table.' },
+  { id: 'loose', label: 'Loose link', swatch: 'dash', what: 'The app writes a reference, but the database never checks it.' },
+  { id: 'policy', label: 'Access rule checks', swatch: 'dot', what: 'An access rule on one table looks at the other to decide who may see or change rows.' },
+  { id: 'auto', label: 'Automatic action writes', swatch: 'dash', what: 'When a record on one end changes, something runs on its own and writes to the other.' },
+];
+const kindOf = (l) => l.kind === 'inferred' ? 'loose' : l.kind === 'junction' ? 'knot' : l.kind === 'policy' ? 'policy' : l.kind === 'trigger' ? 'auto' : 'fk';
+const kindLabel = (k) => (KINDS.find((x) => x.id === k) || {}).label || k;
+state.filter = new Set();
+function renderFilters() {
+  const bar = $('#filters'); bar.innerHTML = '';
+  bar.append(h('span', { class: 'lbl' }, 'Highlight:'));
+  const counts = new Map();
+  for (const e of current.edges) { if (e.k === 'group') { for (const [k, n] of Object.entries(e.kinds || {})) counts.set(k, (counts.get(k) || 0) + n); } else counts.set(e.k, (counts.get(e.k) || 0) + 1); }
+  for (const k of KINDS) {
+    const n = counts.get(k.id) || 0;
+    const b = h('button', { class: 'chip', 'aria-pressed': String(state.filter.has(k.id)), title: k.what, onclick: () => { if (state.filter.has(k.id)) state.filter.delete(k.id); else state.filter.add(k.id); renderFilters(); applyHighlight(); } }, h('i', { class: k.swatch }), k.label, h('span', { class: 'count' }, String(n)));
+    b.style.setProperty('--kc', `var(--c-${k.id})`);
+    if (!n) b.disabled = true, b.style.opacity = .45;
+    bar.append(b);
+  }
+  if (state.filter.size) bar.append(h('button', { class: 'clear', onclick: () => { state.filter.clear(); renderFilters(); applyHighlight(); } }, 'Clear'));
+}
+
 // ---- map rendering
 const svg = $('#svg');
 let current = { nodes: [], edges: [] };
@@ -610,34 +659,33 @@ function render() {
   if (state.level === 'groups') {
     nodes = groups.map((g) => ({ id: g.name, title: g.label, sub: `${g.tables.length} table${g.tables.length === 1 ? '' : 's'}`, group: g.name, kind: 'group', w: Math.max(150, g.label.length * 9 + 40), h: 54 }));
     const agg = new Map();
-    for (const l of links) { if (l.kind === 'inferred') continue; const a = groupOf(l.from), b = groupOf(l.to); if (!a || !b || a === b) continue; const k = [a, b].sort().join('|'); agg.set(k, (agg.get(k) || 0) + 1); }
-    edges = [...agg].map(([k, n]) => { const [a, b] = k.split('|'); return { a, b, n, kind: 'grouplink' }; });
+    for (const l of links) { if (l.kind === 'inferred') continue; const a = groupOf(l.from), b = groupOf(l.to); if (!a || !b || a === b) continue; const k = [a, b].sort().join('|'); if (!agg.has(k)) agg.set(k, { n: 0, kinds: {} }); const g = agg.get(k); g.n++; g.kinds[kindOf(l)] = (g.kinds[kindOf(l)] || 0) + 1; }
+    edges = [...agg].map(([k, g]) => { const [a, b] = k.split('|'); return { a, b, n: g.n, kinds: g.kinds, k: 'group' }; });
   } else {
     const members = state.level === 'all' ? [...tables.keys()].filter((n) => tables.get(n).kind === 'table') : groups.find((g) => g.name === state.group).tables.slice();
     const set = new Set(members);
     const shown = new Set(members);
     edges = [];
+    const junction = new Set([...tables.values()].filter((t) => t.isJunction).map((t) => t.name));
     for (const l of links) {
-      if (state.level === 'group' && l.kind === 'junction') continue;
-      if (state.level === 'all' && (l.kind === 'inferred')) continue;
+      const kind = kindOf(l);
+      // In a group view junction tables are drawn as boxes, so their two "belongs to" lines say it all.
+      if (state.level === 'group' && kind === 'knot') continue;
+      // In the every-table view junction tables are collapsed into one thick line; loose links are left out.
+      if (state.level === 'all' && kind === 'loose') continue;
+      if (state.level === 'all' && kind === 'fk' && (junction.has(l.from) || junction.has(l.to))) continue;
       const inA = set.has(l.from), inB = set.has(l.to);
       if (!inA && !inB) continue;
       if (state.level === 'all' && !(inA && inB)) continue;
-      if (state.level === 'group' && !(inA && inB)) { shown.add(l.from); shown.add(l.to); }
       if (!tables.has(l.from) || !tables.has(l.to)) continue;
-      edges.push({ a: l.from, b: l.to, link: l, kind: l.kind === 'inferred' ? 'loose' : l.kind === 'junction' ? 'knot' : 'solid' });
+      if (state.level === 'group' && !(inA && inB)) { shown.add(l.from); shown.add(l.to); }
+      edges.push({ a: l.from, b: l.to, link: l, k: kind });
     }
-    if (state.level === 'all') {
-      // collapse junction tables into a single knot edge for readability
-      for (const l of links) if (l.kind === 'junction' && set.has(l.from) && set.has(l.to)) edges.push({ a: l.from, b: l.to, link: l, kind: 'knot' });
-      const junction = new Set([...tables.values()].filter((t) => t.isJunction).map((t) => t.name));
-      edges = edges.filter((e) => !(e.kind === 'solid' && (junction.has(e.a) || junction.has(e.b))));
-      for (const j of junction) shown.delete(j);
-    }
+    if (state.level === 'all') for (const j of junction) shown.delete(j);
     nodes = [...shown].filter((n) => tables.has(n)).map((n) => { const t = tables.get(n); return { id: n, title: t.label, sub: set.has(n) ? '' : `in ${groups.find((g) => g.name === t.group)?.label || 'another group'}`, group: t.group, kind: 'table', stub: !set.has(n), hub: t.isHub, auto: t.triggers.length > 0, flag: t.notes && t.notes.length > 0, w: Math.max(110, t.label.length * 8 + 30), h: set.has(n) ? 40 : 44 }; });
   }
   current = { nodes, edges };
-  const simple = edges.map((e) => ({ a: e.a, b: e.b, w: e.kind === 'grouplink' ? 1 + Math.log(e.n) : 1, len: e.kind === 'grouplink' ? 1.3 : 1 }));
+  const simple = edges.map((e) => ({ a: e.a, b: e.b, w: e.k === 'group' ? 1 + Math.log(e.n) : (e.k === 'policy' || e.k === 'auto') ? .4 : 1, len: e.k === 'group' ? 1.3 : 1 }));
   const pos = bestLayout(nodes, simple, LW, LH, { pad: state.level === 'groups' ? 110 : 80, seed: state.level === 'groups' ? 3 : 5, effort: nodes.length > 20 ? 1 : 2 });
   current.pos = pos;
   const storeKey = store.key();
@@ -655,17 +703,16 @@ function render() {
     const pairKey = [e.a, e.b].sort().join('|'); const nth = seenPair.get(pairKey) || 0; seenPair.set(pairKey, nth + 1);
     e.curve = nth ? (nth % 2 ? 1 : -1) * Math.ceil(nth / 2) * 22 : 0;
     const d = edgePath(pa, pb, e.a, e.b, e.curve);
-    const cls = e.kind === 'grouplink' ? 'link grouplink' : e.kind === 'loose' ? 'link loose' : e.kind === 'knot' ? 'link knot' : 'link';
-    const path = el('path', { d, class: cls });
-    if (e.kind === 'grouplink') path.style.setProperty('--w', String(1 + Math.min(6, e.n * .8)));
+    const path = el('path', { d, class: `link k-${e.k}` });
+    if (e.k === 'group') path.style.setProperty('--w', String(1 + Math.min(6, e.n * .8)));
     const hit = el('path', { d, class: 'link hit' });
     e.path = path; e.hit = hit; path.dataset.a = e.a; path.dataset.b = e.b;
-    const text = e.kind === 'grouplink' ? `${e.n} connection${e.n === 1 ? '' : 's'} between ${groups.find((g) => g.name === e.a).label} and ${groups.find((g) => g.name === e.b).label}` : phrase(e.link);
+    const text = e.k === 'group' ? `${e.n} connection${e.n === 1 ? '' : 's'} between ${groups.find((g) => g.name === e.a).label} and ${groups.find((g) => g.name === e.b).label}: ${Object.entries(e.kinds).map(([k, n]) => `${n} ${kindLabel(k).toLowerCase()}`).join(', ')}` : phrase(e.link);
     hit.addEventListener('mousemove', (ev) => showTip(text, ev.clientX, ev.clientY));
     hit.addEventListener('mouseleave', hideTip);
     hit.addEventListener('click', () => { if (e.link) select(e.link.from); });
     gEdges.append(path, hit);
-    if (e.kind === 'grouplink') {
+    if (e.k === 'group') {
       const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
       e.labelBg = el('rect', { x: mx - 9, y: my - 8, width: 18, height: 16, rx: 4, class: 'edgelabel-bg' }); e.labelText = el('text', { x: mx, y: my + 4, 'text-anchor': 'middle', class: 'edgelabel' }, String(e.n));
       gLabels.append(e.labelBg, e.labelText);
@@ -692,17 +739,34 @@ function render() {
     gNodes.append(g);
   }
   geometry();
+  renderFilters();
   applyHighlight();
   renderCrumbs();
   $('#btn-all').setAttribute('aria-pressed', String(state.level === 'all'));
 }
 $('#btn-tidy').addEventListener('click', () => { store.clear(store.key()); state.refit = true; render(); });
+function setFocus(on) {
+  $('#view-map').classList.toggle('focus', on);
+  const b = $('#btn-focus'); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Show panels' : 'Hide panels';
+  store.save('wt-focus', { on });
+}
+$('#btn-focus').addEventListener('click', () => { setFocus(!$('#view-map').classList.contains('focus')); state.refit = true; render(); });
+if (store.load('wt-focus').on) setFocus(true);
 function applyHighlight() {
   const sel = state.selected;
   const neigh = new Set();
   if (sel) for (const e of current.edges) { if (e.a === sel) neigh.add(e.b); if (e.b === sel) neigh.add(e.a); }
-  for (const n of current.nodes) { n.el.classList.toggle('selected', n.id === sel); n.el.classList.toggle('neigh', neigh.has(n.id)); n.el.classList.toggle('dim', !!sel && n.id !== sel && !neigh.has(n.id)); }
-  for (const e of current.edges) { const lit = sel && (e.a === sel || e.b === sel); e.path.classList.toggle('lit', !!lit); e.path.classList.toggle('dim', !!sel && !lit); }
+  const f = state.filter;
+  const matches = (e) => !f.size || (e.k === 'group' ? Object.keys(e.kinds || {}).some((k) => f.has(k)) : f.has(e.k));
+  const touched = new Set();
+  for (const e of current.edges) if (f.size && matches(e)) { touched.add(e.a); touched.add(e.b); }
+  for (const n of current.nodes) { n.el.classList.toggle('selected', n.id === sel); n.el.classList.toggle('neigh', neigh.has(n.id)); n.el.classList.toggle('dim', (!!sel && n.id !== sel && !neigh.has(n.id)) || (f.size > 0 && !touched.has(n.id) && n.id !== sel)); }
+  for (const e of current.edges) {
+    const lit = sel && (e.a === sel || e.b === sel); const m = matches(e);
+    e.path.classList.toggle('lit', !!lit); e.path.classList.toggle('bold', f.size > 0 && m); e.path.classList.toggle('faded', f.size > 0 && !m);
+    e.path.classList.toggle('dim', !!sel && !lit && !(f.size > 0 && m));
+    if (e.labelText && e.k === 'group') { const n = f.size ? Object.entries(e.kinds).filter(([k]) => f.has(k)).reduce((t, [, v]) => t + v, 0) : e.n; e.labelText.textContent = String(n); e.labelBg.style.opacity = e.labelText.style.opacity = (f.size && !n) ? .15 : 1; }
+  }
 }
 function select(name) {
   const t = tables.get(name); if (!t) return;
@@ -794,6 +858,12 @@ function renderPanel() {
   sec('Belongs to', out.map((l) => h('li', {}, ...tlink(l.to), h('span', {}, ` — ${phrase(l)}`))), 'Nothing. This is a top-level thing.');
   sec('Has', inn.map((l) => h('li', {}, ...tlink(l.from), h('span', {}, ` — ${phrase(l)}`))), 'Nothing points at this table.');
   if (knots.length) sec('Any combination with', knots.map((l) => h('li', {}, ...tlink(l.from === t.name ? l.to : l.from), h('span', {}, ` — ${phrase(l)}`))), '');
+  const polOut = links.filter((l) => l.kind === 'policy' && l.from === t.name), polIn = links.filter((l) => l.kind === 'policy' && l.to === t.name);
+  const autoOut = links.filter((l) => l.kind === 'trigger' && l.from === t.name), autoIn = links.filter((l) => l.kind === 'trigger' && l.to === t.name);
+  if (polOut.length) sec('Access rules here look at', polOut.map((l) => h('li', {}, ...tlink(l.to), h('span', {}, ` — ${phrase(l)}`))), '');
+  if (polIn.length) sec('Looked at by access rules on', polIn.map((l) => h('li', {}, ...tlink(l.from), h('span', {}, ` — ${phrase(l)}`))), '');
+  if (autoOut.length) sec('Changes here automatically write to', autoOut.map((l) => h('li', {}, ...tlink(l.to), h('span', {}, ` — ${phrase(l)}`))), '');
+  if (autoIn.length) sec('Written automatically because of', autoIn.map((l) => h('li', {}, ...tlink(l.from), h('span', {}, ` — ${phrase(l)}`))), '');
   if (loose.length) { const s = h('section', {}, h('h3', {}, 'Loose links'), h('p', { class: 'loose-note' }, 'The app fills these in, but the database does not check them. If the other record is deleted, this one keeps pointing at nothing.')); const ul = h('ul'); for (const l of loose) ul.append(h('li', {}, ...tlink(l.from === t.name ? l.to : l.from), h('span', {}, ` — ${phrase(l)}`))); s.append(ul); p.append(s); }
   if (t.triggers.length) { const s = h('section', {}, h('h3', {}, 'Happens automatically')); for (const tr of t.triggers) { const n = h('div', { class: 'auto-note' }, h('b', {}, '●'), h('span', {}, tr.text, tr.touches.length ? h('span', {}, ' Touches: ') : '', ...tr.touches.flatMap((x, i) => [i ? ', ' : '', tlink(x)[1]]))); s.append(n); } p.append(s); }
   if (t.notes && t.notes.length) { const s = h('section', {}, h('h3', {}, 'Review notes')); for (const n of t.notes) s.append(h('div', { class: 'note' }, h('span', { class: `sev ${n.sev}` }, n.sev), h('span', {}, n.msg, n.ev ? h('span', { class: 'mono' }, ` ${n.ev.slice(0, 120)}`) : '', h('span', { class: 'rule' }, n.rule)))); p.append(s); }
@@ -843,7 +913,7 @@ function renderFlowMap(f) {
   const flowKey = `wt-flow:${f.title}`;
   applySaved(pos, W, H, flowKey);
   const cur = new Set(f.steps[stepIdx].tables);
-  for (const e of edges) { const pa = pos.get(e.a), pb = pos.get(e.b); e.path = el('path', { d: edgePath(pa, pb, e.a, e.b, 0), class: 'link' + (e.link.kind === 'inferred' ? ' loose' : e.link.kind === 'junction' ? ' knot' : '') + ((cur.has(e.a) && cur.has(e.b)) ? ' lit' : '') }); gE.append(e.path); }
+  for (const e of edges) { const pa = pos.get(e.a), pb = pos.get(e.b); e.path = el('path', { d: edgePath(pa, pb, e.a, e.b, 0), class: `link k-${kindOf(e.link)}` + ((cur.has(e.a) && cur.has(e.b)) ? ' lit' : '') }); gE.append(e.path); }
   const geometry = () => { for (const e of edges) e.path.setAttribute('d', edgePath(pos.get(e.a), pos.get(e.b), e.a, e.b, 0)); for (const n of nodes) { const p = pos.get(n.id); n.el.setAttribute('transform', `translate(${p.x - n.w / 2} ${p.y - n.h / 2})`); } };
   for (const n of nodes) {
     const p = pos.get(n.id); const g = el('g', { class: 'node' + (cur.has(n.id) ? ' selected' : ' dim'), transform: `translate(${p.x - n.w / 2} ${p.y - n.h / 2})` });
@@ -861,9 +931,11 @@ function renderWords() {
   w.append(h('h2', {}, 'How to read the map'), h('p', { class: 'lede' }, 'Every box is a table: one kind of record the app keeps, like a location or a work log. Lines show how records point at each other.'));
   const howto = h('div', { class: 'howto' });
   const mk = (svgInner, title, text) => { const d = h('div'); d.innerHTML = `<svg viewBox="0 0 220 34">${svgInner}</svg>`; d.append(h('b', {}, title), h('span', {}, text)); howto.append(d); };
-  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--line-strong)" stroke-width="2"/>', 'Belongs to', 'A solid line means each record on one end belongs to one record on the other. A location belongs to a client; a client has many locations.');
-  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--loose)" stroke-width="2" stroke-dasharray="6 4"/>', 'Loose link', 'A dashed line means the app writes a reference, but the database never checks it. These can quietly point at deleted records.');
-  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--accent)" stroke-width="4"/>', 'Any combination', 'A thick teal line means the two kinds of records can be paired freely, like employees and the locations they are assigned to.');
+  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--c-policy)" stroke-width="2.5" stroke-dasharray="2 4" stroke-linecap="round"/>', 'Access rule checks', 'A dotted purple line means an access rule on one table looks at the other to decide who may see or change rows. Use the Highlight filter on the map to bold these.');
+  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--c-auto)" stroke-width="2.5" stroke-dasharray="10 5"/>', 'Automatic action writes', 'A long-dashed amber line means a change on one end makes something run on its own and write to the other.');
+  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--c-fk)" stroke-width="2"/>', 'Belongs to', 'A solid line means each record on one end belongs to one record on the other. A location belongs to a client; a client has many locations.');
+  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--c-loose)" stroke-width="2" stroke-dasharray="6 4"/>', 'Loose link', 'A dashed line means the app writes a reference, but the database never checks it. These can quietly point at deleted records.');
+  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--c-knot)" stroke-width="4"/>', 'Any combination', 'A thick teal line means the two kinds of records can be paired freely, like employees and the locations they are assigned to.');
   mk('<circle cx="110" cy="17" r="6" fill="var(--auto)"/>', 'Automatic action', 'An amber dot on a box means something happens on its own when a record there is added or changed, such as an audit entry being written.');
   mk('<rect x="10" y="4" width="200" height="26" rx="8" fill="var(--ground)" stroke="var(--line-strong)" stroke-dasharray="3 3"/>', 'From another group', 'A dashed box is a table from a different group, shown so you can see the connection. Click it to jump there.');
   mk('<rect x="10" y="4" width="200" height="26" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/>', 'Hub', 'A thick border marks a table that many others point at. Users and locations are the hubs of this app.');

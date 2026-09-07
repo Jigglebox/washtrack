@@ -82,9 +82,30 @@ export function renderExplorer(g: SchemaGraph, d: Descriptions, projectName: str
   for (const t of tables) { const gr = groups.find((x) => x.name === t.group); if (gr && !gr.tables.includes(t.name)) gr.tables.push(t.name); }
   for (const gr of groups) gr.tables.sort((a, b) => { const ta = byName.get(a)!, tb = byName.get(b)!; return (tb.inboundDegree - ta.inboundDegree) || a.localeCompare(b); });
 
-  const links = g.relationships.filter((r) => byName.get(r.from)?.kind !== 'view' && byName.get(r.to)?.kind !== 'view').map((r) => ({
+  const links: any[] = g.relationships.filter((r) => byName.get(r.from)?.kind !== 'view' && byName.get(r.to)?.kind !== 'view').map((r) => ({
     name: r.name, from: r.from, to: r.to, kind: r.kind, cols: r.fromCols, optional: r.optional, one: r.oneToOne, via: r.via, phrase: d.phrases?.[r.name],
   }));
+  // Access rules that look at another table to decide (RLS policy on A references B)
+  const policyPairs = new Map<string, { from: string; to: string; rules: string[]; commands: string[] }>();
+  for (const pol of g.policies) for (const t of pol.tables) {
+    if (t === pol.table || !byName.has(t) || byName.get(t)!.kind === 'view' || !byName.has(pol.table)) continue;
+    const k = `${pol.table}→${t}`;
+    if (!policyPairs.has(k)) policyPairs.set(k, { from: pol.table, to: t, rules: [], commands: [] });
+    policyPairs.get(k)!.rules.push(pol.name); policyPairs.get(k)!.commands.push(pol.command);
+  }
+  for (const [k, v] of policyPairs) links.push({ name: `policy:${k}`, from: v.from, to: v.to, kind: 'policy', cols: [], rules: v.rules, commands: [...new Set(v.commands)] });
+  // Automatic actions that write to another table (trigger on A runs a function that touches B)
+  const autoPairs = new Map<string, { from: string; to: string; fns: string[]; events: string[] }>();
+  for (const tr of g.triggers) {
+    const fn = g.functions.find((f) => f.name === tr.fn);
+    for (const t of fn?.tables ?? []) {
+      if (t === tr.table || !byName.has(t) || byName.get(t)!.kind === 'view' || !byName.has(tr.table)) continue;
+      const k = `${tr.table}→${t}`;
+      if (!autoPairs.has(k)) autoPairs.set(k, { from: tr.table, to: t, fns: [], events: [] });
+      autoPairs.get(k)!.fns.push(tr.fn); autoPairs.get(k)!.events.push(...tr.events);
+    }
+  }
+  for (const [k, v] of autoPairs) links.push({ name: `auto:${k}`, from: v.from, to: v.to, kind: 'trigger', cols: [], fns: [...new Set(v.fns)], events: [...new Set(v.events)] });
 
   const knownTables = new Set(tables.map((t) => t.name));
   const flows = (d.flows ?? []).map((f) => ({ title: f.title, steps: f.steps.map((s) => ({ text: s.text, tables: s.tables.filter((t) => knownTables.has(t)) })) }));
