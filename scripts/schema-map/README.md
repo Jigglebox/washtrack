@@ -45,6 +45,11 @@ dashboard without a migration.
 
 ## Output
 
+- `explorer.html`: an interactive, plain-English map for non-developers. Groups,
+  tables, connections read as sentences, "what happens when" walkthroughs, and a
+  glossary. Descriptions come from `docs/schema-descriptions.json`, which is
+  hand-written and safe to edit; the structure comes from the crawl. Open the
+  file in a browser.
 - `README.md`: stats, domain list, full relationship map, hub tables, warnings.
 - `clusters/<domain>.md`: one diagram per domain with key columns.
 - `tables/<table>.md`: columns, relationships in both directions, neighbourhood
@@ -75,6 +80,15 @@ Tables are grouped with label propagation over the foreign key graph. Tables
 referenced by many others (`--hub-ratio`, `--min-hub-degree`) are hubs; each
 hub gets its own domain with the tables that only reference it, and appears as
 a stub in every other domain diagram so those stay readable.
+
+## Editing the plain-English text
+
+`docs/schema-descriptions.json` holds the label, one-line description and
+"who uses it" for every table and group, the walkthrough stories, the glossary,
+and optional `phrases` that override how a specific connection is worded
+(keyed by the constraint name from `schema.json`). Tables without an entry
+still appear, just without a description. Re-run `npm run schema:map` after
+editing.
 
 ## Options
 

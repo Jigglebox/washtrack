@@ -1,6 +1,6 @@
-# washtrack-main schema map
+# WashTrack schema map
 
-_Generated 2026-09-05 by `scripts/schema-map`. Do not edit by hand; run `npm run schema:map`._
+_Generated 2026-09-07 by `scripts/schema-map`. Do not edit by hand; run `npm run schema:map`._
 
 Source of truth: types.ts and migrations in the repo. Set `SUPABASE_DB_URL` to read the live database instead (adds row counts, live policies, view definitions, and drift against the repo).
 
@@ -19,8 +19,8 @@ How this database fits together: every table, how they reference each other, whi
 | RLS policies | 131 |
 | Triggers | 16 |
 | SQL functions | 32 |
-| Edge functions | 14 |
-| Frontend files querying the DB | 59 |
+| Edge functions | 15 |
+| Frontend files querying the DB | 65 |
 
 ## Domains
 
@@ -126,6 +126,7 @@ erDiagram
 
 ## Other pages
 
+- **[Interactive explorer](explorer.html)**: the same map as a click-around page written for non-developers. Open the file in a browser (GitHub shows its source, not the page).
 - [Functions, triggers and code coupling](functions.md)
 - [RLS policy matrix](policies.md)
 - `schema.json`: the whole graph as data, for other tooling

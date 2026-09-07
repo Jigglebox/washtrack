@@ -1,0 +1,597 @@
+<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #F3F6F9; --surface: #FFFFFF; --surface-2: #E9EFF4; --ink: #16212B; --muted: #5B6B7A; --line: #D3DCE4; --line-strong: #AEBCC8;
+  --accent: #0F8B8D; --accent-ink: #0B6E70; --accent-soft: #D9F0F0; --auto: #C7791A; --auto-soft: #FBEBD3; --loose: #8A9AA8;
+  --g0: #0F8B8D; --g1: #4C5FD6; --g2: #9A4FA8; --g3: #C7791A; --g4: #6B8E23; --g5: #C24A3A; --g6: #2E86C1; --g7: #C4457C; --g8: #5F7385; --g9: #2A9D6F; --g10: #8B6D2E; --g11: #4A7C9D;
+  --shadow: 0 1px 2px rgba(22,33,43,.06), 0 6px 20px rgba(22,33,43,.08);
+  --radius: 10px;
+  --font-display: "Outfit", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F171E; --surface: #16222C; --surface-2: #1D2B37; --ink: #E8EEF3; --muted: #93A3B1; --line: #263440; --line-strong: #3A4B59;
+    --accent: #3FC1C3; --accent-ink: #7FDCDD; --accent-soft: #143B3C; --auto: #E9A23B; --auto-soft: #3E2E14; --loose: #6E7F8C;
+    --g0: #3FC1C3; --g1: #8C9AF0; --g2: #C58AD2; --g3: #E9A23B; --g4: #9DC24C; --g5: #E6796A; --g6: #63B3F0; --g7: #EE7FAE; --g8: #94A7B8; --g9: #52C795; --g10: #C9A65B; --g11: #7FB0D1;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0F171E; --surface: #16222C; --surface-2: #1D2B37; --ink: #E8EEF3; --muted: #93A3B1; --line: #263440; --line-strong: #3A4B59;
+  --accent: #3FC1C3; --accent-ink: #7FDCDD; --accent-soft: #143B3C; --auto: #E9A23B; --auto-soft: #3E2E14; --loose: #6E7F8C;
+  --g0: #3FC1C3; --g1: #8C9AF0; --g2: #C58AD2; --g3: #E9A23B; --g4: #9DC24C; --g5: #E6796A; --g6: #63B3F0; --g7: #EE7FAE; --g8: #94A7B8; --g9: #52C795; --g10: #C9A65B; --g11: #7FB0D1;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a { color: var(--accent-ink); }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; line-height: 1.2; }
+.mono { font-family: var(--font-mono); font-size: .86em; }
+.eyebrow { font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+.app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+.topbar { display: flex; align-items: center; gap: 20px; padding: 10px 18px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.topbar h1 { font-size: 18px; font-weight: 600; }
+.topbar h1 small { display: block; font-family: var(--font-body); font-weight: 400; font-size: 12px; color: var(--muted); }
+.tabs { display: flex; gap: 4px; margin-left: auto; background: var(--surface-2); padding: 3px; border-radius: 999px; }
+.tabs button { padding: 6px 14px; border-radius: 999px; color: var(--muted); font-weight: 600; font-family: var(--font-display); font-size: 13px; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+.view { display: none; min-height: 0; }
+.view.active { display: grid; }
+#view-map { grid-template-columns: 250px minmax(0, 1fr) 360px; }
+#view-flows { grid-template-columns: 280px minmax(0, 1fr); }
+#view-words { grid-template-columns: minmax(0, 1fr); overflow: auto; }
+
+.rail { border-right: 1px solid var(--line); background: var(--surface); overflow: auto; padding: 12px 10px; }
+.rail input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); color: var(--ink); font: inherit; margin-bottom: 10px; }
+.rail .group { margin-bottom: 4px; }
+.rail .group > button { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 7px 8px; border-radius: 8px; font-family: var(--font-display); font-weight: 600; font-size: 14px; }
+.rail .group > button:hover, .rail .group > button[aria-current="true"] { background: var(--surface-2); }
+.rail .group .count { margin-left: auto; color: var(--muted); font-weight: 400; font-size: 12px; font-variant-numeric: tabular-nums; }
+.rail .tables { display: none; padding: 2px 0 6px 12px; }
+.rail .group.open .tables { display: block; }
+.rail .tables button { display: block; width: 100%; text-align: left; padding: 4px 10px; border-radius: 6px; font-size: 14px; color: var(--ink); }
+.rail .tables button:hover { background: var(--surface-2); }
+.rail .tables button[aria-current="true"] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+.rail .tables button.hidden { display: none; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--gc, var(--muted)); }
+
+.canvas { position: relative; min-width: 0; min-height: 0; background: var(--ground); }
+.canvas svg { width: 100%; height: 100%; display: block; touch-action: none; }
+.crumbs { position: absolute; top: 12px; left: 14px; display: flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 13px; z-index: 2; background: color-mix(in srgb, var(--surface) 88%, transparent); padding: 6px 10px; border-radius: 999px; box-shadow: var(--shadow); }
+.crumbs button { color: var(--accent-ink); font-weight: 600; }
+.crumbs span.sep { color: var(--muted); }
+.crumbs .here { font-weight: 600; }
+.canvas .hint { position: absolute; bottom: 12px; left: 14px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--surface) 88%, transparent); padding: 5px 10px; border-radius: 999px; }
+.canvas .tools { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; z-index: 2; }
+.canvas .tools button { background: var(--surface); box-shadow: var(--shadow); padding: 6px 10px; border-radius: 8px; font-size: 12px; font-family: var(--font-display); font-weight: 600; color: var(--muted); }
+.canvas .tools button[aria-pressed="true"] { color: var(--accent-ink); }
+.legend { position: absolute; bottom: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--surface) 88%, transparent); padding: 6px 10px; border-radius: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 22px; border-top: 2px solid var(--line-strong); }
+.legend i.dash { border-top-style: dashed; border-color: var(--loose); }
+.legend i.knot { border-top-width: 4px; border-color: var(--accent); }
+.legend b { width: 9px; height: 9px; border-radius: 50%; background: var(--auto); display: inline-block; }
+
+/* svg */
+.link { fill: none; stroke: var(--line-strong); stroke-width: 1.5; transition: opacity .15s, stroke .15s; }
+.link.loose { stroke: var(--loose); stroke-dasharray: 5 4; }
+.link.knot { stroke: var(--accent); stroke-width: 3; }
+.link.grouplink { stroke-width: var(--w, 2); }
+.link.hit { stroke: transparent; stroke-width: 14; cursor: pointer; }
+.link.lit { stroke: var(--accent); stroke-width: 2.5; }
+.link.lit.loose { stroke: var(--accent); }
+.dim { opacity: .18; }
+.node { cursor: pointer; }
+.node rect { fill: var(--surface); stroke: var(--gc); stroke-width: 1.5; rx: 9; transition: stroke-width .15s; }
+.node.stub rect { fill: var(--ground); stroke-dasharray: 3 3; }
+.node.hub rect { stroke-width: 2.5; }
+.node.selected rect { stroke: var(--accent); stroke-width: 3; fill: var(--surface); }
+.node.neigh rect { stroke-width: 2.5; }
+.node text { font-family: var(--font-display); font-size: 13px; font-weight: 600; fill: var(--ink); pointer-events: none; }
+.node text.sub { font-family: var(--font-body); font-weight: 400; font-size: 11px; fill: var(--muted); }
+.node .badge { fill: var(--auto); }
+.node.groupnode rect { fill: var(--surface); stroke-width: 2; }
+.node.groupnode .fill { fill: var(--gc); opacity: .12; stroke: none; }
+.node.groupnode text.title { font-size: 15px; }
+.edgelabel { font-family: var(--font-body); font-size: 11px; fill: var(--muted); pointer-events: none; }
+.edgelabel-bg { fill: var(--ground); }
+.tooltip { position: absolute; pointer-events: none; background: var(--ink); color: var(--ground); padding: 7px 10px; border-radius: 8px; font-size: 13px; max-width: 320px; z-index: 5; box-shadow: var(--shadow); display: none; }
+
+.panel { border-left: 1px solid var(--line); background: var(--surface); overflow: auto; padding: 18px 20px 40px; }
+.panel h2 { font-size: 22px; font-weight: 600; margin: 4px 0 2px; }
+.panel .sysname { color: var(--muted); }
+.panel .what { font-size: 16px; margin: 12px 0 6px; max-width: 62ch; }
+.panel .who { color: var(--muted); margin: 0 0 14px; }
+.panel section { border-top: 1px solid var(--line); padding: 12px 0; }
+.panel section h3 { font-size: 12px; font-family: var(--font-display); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.panel ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.panel li { display: flex; gap: 8px; align-items: baseline; }
+.panel li .dot { position: relative; top: 1px; }
+.panel li button.tl { color: var(--accent-ink); font-weight: 600; padding: 0; }
+.panel li button.tl:hover { text-decoration: underline; }
+.panel .empty { color: var(--muted); font-style: italic; }
+.panel .stat { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+.panel .stat div { background: var(--surface-2); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+.panel .stat b { font-family: var(--font-display); font-size: 16px; display: block; font-variant-numeric: tabular-nums; }
+.panel details summary { cursor: pointer; color: var(--accent-ink); font-weight: 600; }
+.panel table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; }
+.panel td { padding: 3px 6px 3px 0; vertical-align: top; border-top: 1px solid var(--line); }
+.panel td:first-child { white-space: nowrap; }
+.panel td .mono { color: var(--muted); }
+.auto-note { display: flex; gap: 8px; align-items: flex-start; background: var(--auto-soft); border-radius: 8px; padding: 8px 10px; }
+.auto-note b { color: var(--auto); font-family: var(--font-display); }
+.loose-note { font-size: 13px; color: var(--muted); }
+.overview p { max-width: 60ch; }
+.overview .groups { display: grid; gap: 8px; margin-top: 10px; }
+.overview .groups button { display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: center; text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.overview .groups button:hover { border-color: var(--gc); }
+.overview .groups b { font-family: var(--font-display); font-weight: 600; }
+.overview .groups small { color: var(--muted); }
+
+/* flows */
+.flowlist { border-right: 1px solid var(--line); background: var(--surface); overflow: auto; padding: 14px 10px; }
+.flowlist button { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px; font-family: var(--font-display); font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.flowlist button:hover { background: var(--surface-2); }
+.flowlist button[aria-current="true"] { background: var(--accent-soft); color: var(--accent-ink); }
+.flowbody { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+.flowbody .steps { padding: 18px 22px 8px; overflow: auto; }
+.flowbody h2 { font-size: 24px; font-weight: 600; margin-bottom: 12px; }
+.steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
+.steps li[aria-current="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.steps li .n { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+.steps li p { margin: 0 0 6px; max-width: 70ch; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 12px; font-weight: 600; padding: 3px 9px 3px 7px; border-radius: 999px; background: var(--surface-2); color: var(--ink); }
+.flowmap { position: relative; border-top: 1px solid var(--line); background: var(--ground); min-height: 220px; }
+.flowmap svg { width: 100%; height: 100%; display: block; }
+.flowmap .hint { position: absolute; top: 10px; left: 14px; font-size: 12px; color: var(--muted); }
+
+/* words */
+.words { padding: 26px 30px 60px; max-width: 900px; }
+.words h2 { font-size: 24px; font-weight: 600; margin-bottom: 6px; }
+.words .lede { color: var(--muted); max-width: 62ch; margin: 0 0 20px; }
+.words dl { display: grid; grid-template-columns: max-content 1fr; gap: 10px 22px; max-width: 76ch; }
+.words dt { font-family: var(--font-display); font-weight: 600; }
+.words dd { margin: 0; }
+.words .howto { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 14px 0 30px; }
+.words .howto div { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.words .howto b { font-family: var(--font-display); display: block; margin-bottom: 4px; }
+.words .howto svg { width: 100%; height: 34px; display: block; margin-bottom: 6px; }
+
+@media (max-width: 980px) {
+  .app { height: auto; min-height: 100vh; }
+  #view-map { grid-template-columns: 1fr; grid-template-rows: auto 60vh auto; }
+  #view-flows { grid-template-columns: 1fr; }
+  .rail { border-right: 0; border-bottom: 1px solid var(--line); max-height: 220px; }
+  .panel { border-left: 0; border-top: 1px solid var(--line); }
+  .flowlist { border-right: 0; border-bottom: 1px solid var(--line); display: flex; gap: 6px; overflow-x: auto; }
+  .flowlist button { white-space: nowrap; width: auto; }
+  .flowbody { grid-template-rows: auto 300px; }
+  .legend { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <header class="topbar">
+    <h1>__TITLE__<small>__SUBTITLE__</small></h1>
+    <nav class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-view="map">Map</button>
+      <button role="tab" aria-selected="false" data-view="flows">What happens when…</button>
+      <button role="tab" aria-selected="false" data-view="words">Words &amp; legend</button>
+    </nav>
+  </header>
+
+  <section id="view-map" class="view active">
+    <aside class="rail" aria-label="Groups and tables">
+      <input id="search" type="search" placeholder="Find a table…" aria-label="Find a table">
+      <div id="raillist"></div>
+    </aside>
+    <div class="canvas" id="canvas">
+      <div class="crumbs" id="crumbs"></div>
+      <div class="tools"><button id="btn-all" aria-pressed="false">Show every table</button></div>
+      <svg id="svg" role="img" aria-label="Map of database tables and their connections"></svg>
+      <div class="legend"><span><i></i> belongs to</span><span><i class="dash"></i> loose link</span><span><i class="knot"></i> any combination</span><span><b></b> automatic action</span></div>
+      <div class="tooltip" id="tip"></div>
+    </div>
+    <aside class="panel" id="panel"></aside>
+  </section>
+
+  <section id="view-flows" class="view">
+    <aside class="flowlist" id="flowlist"></aside>
+    <div class="flowbody">
+      <div class="steps" id="steps"></div>
+      <div class="flowmap" id="flowmap"><div class="hint">Tables involved in this story. The current step is highlighted.</div><svg id="flowsvg"></svg></div>
+    </div>
+  </section>
+
+  <section id="view-words" class="view">
+    <div class="words" id="words"></div>
+  </section>
+</div>
+
+<script>
+const DATA = /*__DATA__*/{};
+(() => {
+'use strict';
+const $ = (s, el = document) => el.querySelector(s);
+const svgNS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs = {}, ...kids) => { const n = document.createElementNS(svgNS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); for (const k of kids) n.append(k); return n; };
+const h = (tag, attrs = {}, ...kids) => { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'class') n.className = v; else if (k.startsWith('on')) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v); } for (const k of kids) n.append(k); return n; };
+const esc = (s) => String(s ?? '');
+
+const tables = new Map(DATA.tables.map((t) => [t.name, t]));
+const groups = DATA.groups;
+const groupIndex = new Map(groups.map((g, i) => [g.name, i]));
+const groupOf = (t) => tables.get(t)?.group;
+const gcolor = (g) => `var(--g${(groupIndex.get(g) ?? 11) % 12})`;
+const links = DATA.links;
+
+// ---- words
+const human = (s) => esc(s).replace(/^auth\./, 'login ').replace(/_/g, ' ');
+const singular = (s) => { s = human(s); if (/ies$/.test(s)) return s.replace(/ies$/, 'y'); if (/(ss|us|is|map|log|data|info)$/.test(s)) return s; if (/ses$/.test(s)) return s.replace(/es$/, ''); if (/s$/.test(s)) return s.slice(0, -1); return s; };
+const plural = (s) => human(s);
+const label = (n) => tables.get(n)?.label || human(n);
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const col = (c) => human(c).replace(/ id$/, '');
+function phrase(l) {
+  if (l.phrase) return l.phrase;
+  const a = singular(l.from), b = singular(l.to), A = plural(l.from), B = plural(l.to);
+  if (l.kind === 'junction') return `${cap(A)} and ${B} can be linked in any combination. The link is stored in “${label(l.via)}”.`;
+  if (l.from === l.to) return `A ${a} can point at another ${a} (its “${col(l.cols[0])}”).`;
+  if (l.kind === 'inferred') return `A ${a} names a ${b} in its “${col(l.cols[0])}” field, but nothing checks that the ${b} exists. A loose link.`;
+  const one = l.one ? `has exactly one` : l.optional ? `may belong to one` : `belongs to one`;
+  const many = l.one ? `has at most one ${a}` : `can have many ${A}`;
+  return `Each ${a} ${one} ${b} (its “${col(l.cols.join(' + '))}”). A ${b} ${many}.`;
+}
+
+// ---- state
+const state = { level: 'groups', group: null, selected: null, view: 'map' };
+
+// ---- layout (tiny force simulation, seeded so it is stable)
+function seeded(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return ((s >>> 0) % 10000) / 10000; }; }
+function layout(nodes, edges, W, H, opts = {}) {
+  const rnd = seeded(nodes.length * 7919 + (opts.seed || 1));
+  const pos = new Map(nodes.map((n, i) => [n.id, { x: W / 2 + (rnd() - .5) * W * .6, y: H / 2 + (rnd() - .5) * H * .6, vx: 0, vy: 0 }]));
+  const k = opts.spring ?? Math.min(W, H) / Math.max(3, Math.sqrt(nodes.length) * 1.6);
+  const rep = opts.repel ?? k * k * 1.2;
+  const deg = new Map();
+  for (const e of edges) { deg.set(e.a, (deg.get(e.a) || 0) + 1); deg.set(e.b, (deg.get(e.b) || 0) + 1); }
+  for (let it = 0; it < 320; it++) {
+    const t = 1 - it / 320;
+    for (const a of nodes) for (const b of nodes) {
+      if (a.id >= b.id) continue;
+      const pa = pos.get(a.id), pb = pos.get(b.id);
+      let dx = pa.x - pb.x, dy = pa.y - pb.y; let d2 = dx * dx + dy * dy || 1; const d = Math.sqrt(d2);
+      const f = rep / d2 * (1 + (a.w || 0) + (b.w || 0)) * .5;
+      dx = dx / d * f; dy = dy / d * f;
+      pa.vx += dx; pa.vy += dy; pb.vx -= dx; pb.vy -= dy;
+    }
+    for (const e of edges) {
+      const pa = pos.get(e.a), pb = pos.get(e.b);
+      if (!pa || !pb) continue;
+      const dx = pb.x - pa.x, dy = pb.y - pa.y; const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      const f = (d - k * (e.len || 1)) * .02 * (e.w || 1);
+      pa.vx += dx / d * f; pa.vy += dy / d * f; pb.vx -= dx / d * f; pb.vy -= dy / d * f;
+    }
+    for (const n of nodes) {
+      const p = pos.get(n.id);
+      p.vx += (W / 2 - p.x) * .004 * (1 + (deg.get(n.id) || 0) * .15);
+      p.vy += (H / 2 - p.y) * .004 * (1 + (deg.get(n.id) || 0) * .15);
+      p.x += p.vx * t * .9; p.y += p.vy * t * .9; p.vx *= .6; p.vy *= .6;
+    }
+  }
+  // fit into box with padding
+  const fit = () => {
+    const xs = [...pos.values()].map((p) => p.x), ys = [...pos.values()].map((p) => p.y);
+    const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
+    const pad = opts.pad || 90;
+    const sx = (W - pad * 2) / Math.max(1, maxx - minx), sy = (H - pad * 2) / Math.max(1, maxy - miny);
+    for (const p of pos.values()) { p.x = pad + (p.x - minx) * sx; p.y = pad + (p.y - miny) * sy; }
+  };
+  fit();
+  // push overlapping boxes apart (boxes are wide, so treat them as rectangles, not points)
+  const size = new Map(nodes.map((n) => [n.id, { w: (n.w || 110) + 26, h: (n.h || 40) + 26 }]));
+  for (let it = 0; it < 80; it++) {
+    let moved = false;
+    for (const a of nodes) for (const b of nodes) {
+      if (a.id >= b.id) continue;
+      const pa = pos.get(a.id), pb = pos.get(b.id), sa = size.get(a.id), sb = size.get(b.id);
+      const ox = (sa.w + sb.w) / 2 - Math.abs(pa.x - pb.x), oy = (sa.h + sb.h) / 2 - Math.abs(pa.y - pb.y);
+      if (ox <= 0 || oy <= 0) continue;
+      moved = true;
+      if (ox < oy) { const s = (pa.x < pb.x ? -1 : 1) * ox / 2; pa.x += s; pb.x -= s; }
+      else { const s = (pa.y < pb.y ? -1 : 1) * oy / 2; pa.y += s; pb.y -= s; }
+    }
+    for (const n of nodes) { const p = pos.get(n.id), sz = size.get(n.id); p.x = Math.min(W - sz.w / 2, Math.max(sz.w / 2, p.x)); p.y = Math.min(H - sz.h / 2, Math.max(sz.h / 2, p.y)); }
+    if (!moved) break;
+  }
+  return pos;
+}
+
+// ---- svg helpers
+function nodeBox(n) { return { w: n.w || Math.max(96, n.title.length * 8 + 28), h: n.h || 40 }; }
+function edgePath(pa, pb, a, b, curve) {
+  if (a === b) { const r = 26; return `M ${pa.x + 20} ${pa.y - 10} C ${pa.x + 20 + r} ${pa.y - 10 - r}, ${pa.x - 20 - r} ${pa.y - 10 - r}, ${pa.x - 20} ${pa.y - 10}`; }
+  if (!curve) return `M ${pa.x} ${pa.y} L ${pb.x} ${pb.y}`;
+  const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2; const dx = pb.x - pa.x, dy = pb.y - pa.y; const d = Math.sqrt(dx * dx + dy * dy) || 1;
+  return `M ${pa.x} ${pa.y} Q ${mx - dy / d * curve} ${my + dx / d * curve} ${pb.x} ${pb.y}`;
+}
+
+const tip = $('#tip');
+function showTip(text, x, y) { tip.textContent = text; tip.style.display = 'block'; const r = $('#canvas').getBoundingClientRect(); tip.style.left = Math.min(x - r.left + 14, r.width - 330) + 'px'; tip.style.top = (y - r.top + 14) + 'px'; }
+function hideTip() { tip.style.display = 'none'; }
+
+// ---- map rendering
+const svg = $('#svg');
+let current = { nodes: [], edges: [] };
+function render() {
+  const box = svg.getBoundingClientRect(); const W = Math.max(600, box.width), H = Math.max(420, box.height);
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = '';
+  let nodes, edges;
+  if (state.level === 'groups') {
+    nodes = groups.map((g) => ({ id: g.name, title: g.label, sub: `${g.tables.length} table${g.tables.length === 1 ? '' : 's'}`, group: g.name, kind: 'group', w: Math.max(150, g.label.length * 9 + 40), h: 54 }));
+    const agg = new Map();
+    for (const l of links) { if (l.kind === 'inferred') continue; const a = groupOf(l.from), b = groupOf(l.to); if (!a || !b || a === b) continue; const k = [a, b].sort().join('|'); agg.set(k, (agg.get(k) || 0) + 1); }
+    edges = [...agg].map(([k, n]) => { const [a, b] = k.split('|'); return { a, b, n, kind: 'grouplink' }; });
+  } else {
+    const members = state.level === 'all' ? [...tables.keys()].filter((n) => tables.get(n).kind === 'table') : groups.find((g) => g.name === state.group).tables.slice();
+    const set = new Set(members);
+    const shown = new Set(members);
+    edges = [];
+    for (const l of links) {
+      if (state.level === 'group' && l.kind === 'junction') continue;
+      if (state.level === 'all' && (l.kind === 'inferred')) continue;
+      const inA = set.has(l.from), inB = set.has(l.to);
+      if (!inA && !inB) continue;
+      if (state.level === 'all' && !(inA && inB)) continue;
+      if (state.level === 'group' && !(inA && inB)) { shown.add(l.from); shown.add(l.to); }
+      if (!tables.has(l.from) || !tables.has(l.to)) continue;
+      edges.push({ a: l.from, b: l.to, link: l, kind: l.kind === 'inferred' ? 'loose' : l.kind === 'junction' ? 'knot' : 'solid' });
+    }
+    if (state.level === 'all') {
+      // collapse junction tables into a single knot edge for readability
+      for (const l of links) if (l.kind === 'junction' && set.has(l.from) && set.has(l.to)) edges.push({ a: l.from, b: l.to, link: l, kind: 'knot' });
+      const junction = new Set([...tables.values()].filter((t) => t.isJunction).map((t) => t.name));
+      edges = edges.filter((e) => !(e.kind === 'solid' && (junction.has(e.a) || junction.has(e.b))));
+      for (const j of junction) shown.delete(j);
+    }
+    nodes = [...shown].filter((n) => tables.has(n)).map((n) => { const t = tables.get(n); return { id: n, title: t.label, sub: set.has(n) ? '' : `in ${groups.find((g) => g.name === t.group)?.label || 'another group'}`, group: t.group, kind: 'table', stub: !set.has(n), hub: t.isHub, auto: t.triggers.length > 0, w: Math.max(110, t.label.length * 8 + 30), h: set.has(n) ? 40 : 44 }; });
+  }
+  current = { nodes, edges };
+  const pos = layout(nodes, edges.map((e) => ({ a: e.a, b: e.b, w: e.kind === 'grouplink' ? 1 + Math.log(e.n) : 1, len: e.kind === 'grouplink' ? 1.3 : 1 })), W, H, { pad: state.level === 'groups' ? 110 : 80, seed: state.level === 'groups' ? 3 : 5 });
+  const gEdges = el('g'), gNodes = el('g'), gLabels = el('g');
+  svg.append(gEdges, gNodes, gLabels);
+  const seenPair = new Map();
+  for (const e of edges) {
+    const pa = pos.get(e.a), pb = pos.get(e.b); if (!pa || !pb) continue;
+    const pairKey = [e.a, e.b].sort().join('|'); const nth = seenPair.get(pairKey) || 0; seenPair.set(pairKey, nth + 1);
+    const d = edgePath(pa, pb, e.a, e.b, nth ? (nth % 2 ? 1 : -1) * Math.ceil(nth / 2) * 22 : 0);
+    const cls = e.kind === 'grouplink' ? 'link grouplink' : e.kind === 'loose' ? 'link loose' : e.kind === 'knot' ? 'link knot' : 'link';
+    const path = el('path', { d, class: cls });
+    if (e.kind === 'grouplink') path.style.setProperty('--w', String(1 + Math.min(6, e.n * .8)));
+    const hit = el('path', { d, class: 'link hit' });
+    e.path = path; path.dataset.a = e.a; path.dataset.b = e.b;
+    const text = e.kind === 'grouplink' ? `${e.n} connection${e.n === 1 ? '' : 's'} between ${groups.find((g) => g.name === e.a).label} and ${groups.find((g) => g.name === e.b).label}` : phrase(e.link);
+    hit.addEventListener('mousemove', (ev) => showTip(text, ev.clientX, ev.clientY));
+    hit.addEventListener('mouseleave', hideTip);
+    hit.addEventListener('click', () => { if (e.link) select(e.link.from); });
+    gEdges.append(path, hit);
+    if (e.kind === 'grouplink') {
+      const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
+      gLabels.append(el('rect', { x: mx - 9, y: my - 8, width: 18, height: 16, rx: 4, class: 'edgelabel-bg' }), el('text', { x: mx, y: my + 4, 'text-anchor': 'middle', class: 'edgelabel' }, String(e.n)));
+    }
+  }
+  for (const n of nodes) {
+    const p = pos.get(n.id); const { w, hh } = { w: n.w, hh: n.h };
+    const g = el('g', { class: `node ${n.kind === 'group' ? 'groupnode' : ''} ${n.stub ? 'stub' : ''} ${n.hub ? 'hub' : ''}`, transform: `translate(${p.x - w / 2} ${p.y - hh / 2})`, tabindex: 0, role: 'button', 'aria-label': n.title });
+    g.style.setProperty('--gc', gcolor(n.group));
+    g.dataset.id = n.id;
+    if (n.kind === 'group') g.append(el('rect', { width: w, height: hh, class: 'fill', rx: 9 }));
+    g.append(el('rect', { width: w, height: hh }));
+    g.append(el('circle', { cx: 14, cy: hh / 2, r: 5, fill: gcolor(n.group) }));
+    g.append(el('text', { x: 26, y: n.sub ? hh / 2 - 2 : hh / 2 + 5, class: n.kind === 'group' ? 'title' : '' }, n.title));
+    if (n.sub) g.append(el('text', { x: 26, y: hh / 2 + 13, class: 'sub' }, n.sub));
+    if (n.auto) g.append(el('circle', { cx: w - 11, cy: 11, r: 4.5, class: 'badge' }));
+    n.el = g; n.pos = p;
+    const go = () => { if (n.kind === 'group') { state.level = 'group'; state.group = n.id; state.selected = null; render(); renderPanel(); renderRail(); } else select(n.id); };
+    g.addEventListener('click', go);
+    g.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
+    g.addEventListener('mousemove', (ev) => { const t = tables.get(n.id); showTip(n.kind === 'group' ? (groups.find((x) => x.name === n.id).what || n.title) : (t?.what || n.title), ev.clientX, ev.clientY); });
+    g.addEventListener('mouseleave', hideTip);
+    gNodes.append(g);
+  }
+  applyHighlight();
+  renderCrumbs();
+  $('#btn-all').setAttribute('aria-pressed', String(state.level === 'all'));
+}
+function applyHighlight() {
+  const sel = state.selected;
+  const neigh = new Set();
+  if (sel) for (const e of current.edges) { if (e.a === sel) neigh.add(e.b); if (e.b === sel) neigh.add(e.a); }
+  for (const n of current.nodes) { n.el.classList.toggle('selected', n.id === sel); n.el.classList.toggle('neigh', neigh.has(n.id)); n.el.classList.toggle('dim', !!sel && n.id !== sel && !neigh.has(n.id)); }
+  for (const e of current.edges) { const lit = sel && (e.a === sel || e.b === sel); e.path.classList.toggle('lit', !!lit); e.path.classList.toggle('dim', !!sel && !lit); }
+}
+function select(name) {
+  const t = tables.get(name); if (!t) return;
+  if (state.level === 'groups' || (state.level === 'group' && state.group !== t.group && !current.nodes.some((n) => n.id === name))) { state.level = 'group'; state.group = t.group; state.selected = name; render(); }
+  else { state.selected = name; applyHighlight(); }
+  renderPanel(); renderRail(); renderCrumbs();
+  const n = current.nodes.find((x) => x.id === name); if (n) n.el.focus({ preventScroll: true });
+}
+function renderCrumbs() {
+  const c = $('#crumbs'); c.innerHTML = '';
+  const home = h('button', { onclick: () => { state.level = 'groups'; state.group = null; state.selected = null; render(); renderPanel(); renderRail(); } }, 'All groups');
+  c.append(home);
+  if (state.level === 'all') { c.append(h('span', { class: 'sep' }, '›'), h('span', { class: 'here' }, 'Every table')); }
+  if (state.level === 'group') {
+    const g = groups.find((x) => x.name === state.group);
+    c.append(h('span', { class: 'sep' }, '›'));
+    if (state.selected) c.append(h('button', { onclick: () => { state.selected = null; applyHighlight(); renderPanel(); renderRail(); renderCrumbs(); } }, g.label), h('span', { class: 'sep' }, '›'), h('span', { class: 'here' }, label(state.selected)));
+    else c.append(h('span', { class: 'here' }, g.label));
+  }
+  if (state.level === 'all' && state.selected) c.append(h('span', { class: 'sep' }, '›'), h('span', { class: 'here' }, label(state.selected)));
+}
+
+// ---- rail
+function renderRail() {
+  const list = $('#raillist'); list.innerHTML = '';
+  const q = $('#search').value.trim().toLowerCase();
+  for (const g of groups) {
+    const wrap = h('div', { class: 'group' + ((state.group === g.name || q) ? ' open' : '') });
+    wrap.style.setProperty('--gc', gcolor(g.name));
+    const btn = h('button', { 'aria-current': String(state.level === 'group' && state.group === g.name && !state.selected), onclick: () => { state.level = 'group'; state.group = g.name; state.selected = null; render(); renderPanel(); renderRail(); } }, h('span', { class: 'dot' }), g.label, h('span', { class: 'count' }, String(g.tables.length)));
+    const tl = h('div', { class: 'tables' });
+    let any = false;
+    for (const tn of g.tables) {
+      const t = tables.get(tn); const match = !q || t.label.toLowerCase().includes(q) || tn.includes(q) || (t.what || '').toLowerCase().includes(q);
+      if (match) any = true;
+      tl.append(h('button', { class: match ? '' : 'hidden', 'aria-current': String(state.selected === tn), onclick: () => select(tn) }, t.label));
+    }
+    if (q && !any) continue;
+    wrap.append(btn, tl); list.append(wrap);
+  }
+}
+$('#search').addEventListener('input', renderRail);
+$('#btn-all').addEventListener('click', () => { state.level = state.level === 'all' ? 'groups' : 'all'; state.group = null; state.selected = null; render(); renderPanel(); renderRail(); });
+
+// ---- detail panel
+function tlink(name) { const t = tables.get(name); const b = h('button', { class: 'tl', onclick: () => select(name) }, t ? t.label : human(name)); const d = h('span', { class: 'dot' }); d.style.setProperty('--gc', gcolor(groupOf(name))); return [d, b]; }
+function renderPanel() {
+  const p = $('#panel'); p.innerHTML = '';
+  const sel = state.selected && tables.get(state.selected);
+  if (!sel) {
+    const g = state.level === 'group' && groups.find((x) => x.name === state.group);
+    const ov = h('div', { class: 'overview' });
+    if (g) {
+      ov.append(h('div', { class: 'eyebrow' }, 'Group'), h('h2', {}, g.label), h('p', { class: 'what' }, g.what || ''), h('div', { class: 'eyebrow' }, 'Tables in this group'));
+      const list = h('div', { class: 'groups' });
+      for (const tn of g.tables) { const t = tables.get(tn); const b = h('button', { onclick: () => select(tn) }, h('span', { class: 'dot' }), h('span', {}, h('b', {}, t.label), h('br'), h('small', {}, t.what ? t.what.split(/(?<=\.)\s/)[0] : '')), h('small', {}, t.rows != null ? t.rows.toLocaleString('en-US') + ' rows' : '')); b.style.setProperty('--gc', gcolor(g.name)); list.append(b); }
+      ov.append(list);
+    } else {
+      ov.append(h('div', { class: 'eyebrow' }, 'How to use this'), h('h2', {}, DATA.title), h('p', { class: 'what' }, DATA.intro), h('div', { class: 'eyebrow' }, 'Groups'));
+      const list = h('div', { class: 'groups' });
+      for (const g of groups) { const b = h('button', { onclick: () => { state.level = 'group'; state.group = g.name; state.selected = null; render(); renderPanel(); renderRail(); } }, h('span', { class: 'dot' }), h('span', {}, h('b', {}, g.label), h('br'), h('small', {}, g.what || '')), h('small', {}, `${g.tables.length}`)); b.style.setProperty('--gc', gcolor(g.name)); list.append(b); }
+      ov.append(list);
+      if (DATA.live) ov.append(h('p', { class: 'who' }, `Row counts come from the live database (${DATA.live}).`));
+    }
+    p.append(ov); return;
+  }
+  const t = sel;
+  const gl = groups.find((x) => x.name === t.group);
+  p.append(h('div', { class: 'eyebrow' }, gl ? `In “${gl.label}”` : 'Table'), h('h2', {}, t.label), h('div', { class: 'sysname mono' }, t.name));
+  p.append(h('p', { class: 'what' }, t.what || 'No description written yet.'));
+  if (t.who) p.append(h('p', { class: 'who' }, `Used by: ${t.who}`));
+  const stat = h('div', { class: 'stat' });
+  if (t.rows != null) stat.append(h('div', {}, h('b', {}, t.rows.toLocaleString('en-US')), 'rows'));
+  stat.append(h('div', {}, h('b', {}, String(t.cols.length)), 'fields'));
+  stat.append(h('div', {}, h('b', {}, String(t.policies)), t.policies === 1 ? 'access rule' : 'access rules'));
+  p.append(stat);
+
+  const out = links.filter((l) => l.from === t.name && l.kind !== 'junction' && l.kind !== 'inferred');
+  const inn = links.filter((l) => l.to === t.name && l.from !== t.name && l.kind !== 'junction' && l.kind !== 'inferred');
+  const knots = links.filter((l) => l.kind === 'junction' && (l.from === t.name || l.to === t.name));
+  const loose = links.filter((l) => l.kind === 'inferred' && (l.from === t.name || l.to === t.name));
+  const sec = (title, items, empty) => { const s = h('section', {}, h('h3', {}, title)); if (!items.length) s.append(h('p', { class: 'empty' }, empty)); else { const ul = h('ul'); for (const it of items) ul.append(it); s.append(ul); } p.append(s); };
+  sec('Belongs to', out.map((l) => h('li', {}, ...tlink(l.to), h('span', {}, ` — ${phrase(l)}`))), 'Nothing. This is a top-level thing.');
+  sec('Has', inn.map((l) => h('li', {}, ...tlink(l.from), h('span', {}, ` — ${phrase(l)}`))), 'Nothing points at this table.');
+  if (knots.length) sec('Any combination with', knots.map((l) => h('li', {}, ...tlink(l.from === t.name ? l.to : l.from), h('span', {}, ` — ${phrase(l)}`))), '');
+  if (loose.length) { const s = h('section', {}, h('h3', {}, 'Loose links'), h('p', { class: 'loose-note' }, 'The app fills these in, but the database does not check them. If the other record is deleted, this one keeps pointing at nothing.')); const ul = h('ul'); for (const l of loose) ul.append(h('li', {}, ...tlink(l.from === t.name ? l.to : l.from), h('span', {}, ` — ${phrase(l)}`))); s.append(ul); p.append(s); }
+  if (t.triggers.length) { const s = h('section', {}, h('h3', {}, 'Happens automatically')); for (const tr of t.triggers) { const n = h('div', { class: 'auto-note' }, h('b', {}, '●'), h('span', {}, tr.text, tr.touches.length ? h('span', {}, ' Touches: ') : '', ...tr.touches.flatMap((x, i) => [i ? ', ' : '', tlink(x)[1]]))); s.append(n); } p.append(s); }
+  if (t.pages.length || t.edge.length) {
+    const s = h('section', {}, h('h3', {}, 'Where it shows up in the app'));
+    const ul = h('ul');
+    for (const pg of t.pages) ul.append(h('li', {}, h('span', {}, pg)));
+    for (const e of t.edge) ul.append(h('li', {}, h('span', {}, `Behind the scenes: ${e}`)));
+    s.append(ul); p.append(s);
+  }
+  const fields = h('details', {}, h('summary', {}, `Show the ${t.cols.length} fields`));
+  const tbl = h('table');
+  for (const c of t.cols) tbl.append(h('tr', {}, h('td', {}, human(c.n), c.pk ? ' (identifier)' : ''), h('td', {}, c.t, c.ref ? ` → ${label(c.ref)}` : '', c.null ? h('span', { class: 'mono' }, ' optional') : '')));
+  fields.append(tbl);
+  p.append(h('section', {}, fields));
+}
+
+// ---- flows
+let flowIdx = 0, stepIdx = 0;
+function renderFlows() {
+  const fl = $('#flowlist'); fl.innerHTML = '';
+  DATA.flows.forEach((f, i) => fl.append(h('button', { 'aria-current': String(i === flowIdx), onclick: () => { flowIdx = i; stepIdx = 0; renderFlows(); } }, f.title)));
+  const f = DATA.flows[flowIdx]; if (!f) return;
+  const st = $('#steps'); st.innerHTML = '';
+  st.append(h('h2', {}, f.title));
+  const ol = h('ol');
+  f.steps.forEach((s, i) => {
+    const chips = h('div', { class: 'chips' });
+    for (const tn of s.tables) { const c = h('button', { class: 'chip', onclick: (ev) => { ev.stopPropagation(); state.view = 'map'; showView('map'); select(tn); } }, h('span', { class: 'dot' }), label(tn)); c.style.setProperty('--gc', gcolor(groupOf(tn))); chips.append(c); }
+    ol.append(h('li', { 'aria-current': String(i === stepIdx), onclick: () => { stepIdx = i; renderFlows(); } }, h('span', { class: 'n' }, String(i + 1)), h('div', {}, h('p', {}, s.text), chips)));
+  });
+  st.append(ol);
+  renderFlowMap(f);
+}
+function renderFlowMap(f) {
+  const s = $('#flowsvg'); const box = s.getBoundingClientRect(); const W = Math.max(500, box.width), H = Math.max(220, box.height);
+  s.setAttribute('viewBox', `0 0 ${W} ${H}`); s.innerHTML = '';
+  const order = []; for (const st of f.steps) for (const tn of st.tables) if (!order.includes(tn)) order.push(tn);
+  const set = new Set(order);
+  const nodes = order.map((n) => ({ id: n, title: label(n), group: groupOf(n), w: Math.max(110, label(n).length * 8 + 30), h: 40 }));
+  const edges = links.filter((l) => set.has(l.from) && set.has(l.to) && l.from !== l.to).map((l) => ({ a: l.from, b: l.to, link: l }));
+  // left-to-right by first appearance, spread vertically
+  const cols = Math.max(1, Math.min(order.length, Math.floor(W / 190)));
+  const pos = new Map();
+  order.forEach((n, i) => { const c = i % cols, r = Math.floor(i / cols); const rows = Math.ceil(order.length / cols); pos.set(n, { x: (W / (cols + 1)) * (c + 1), y: (H / (rows + 1)) * (r + 1) + (c % 2 ? 14 : -14) }); });
+  const gE = el('g'), gN = el('g'); s.append(gE, gN);
+  const cur = new Set(f.steps[stepIdx].tables);
+  for (const e of edges) { const pa = pos.get(e.a), pb = pos.get(e.b); const path = el('path', { d: edgePath(pa, pb, e.a, e.b, 0), class: 'link' + (e.link.kind === 'inferred' ? ' loose' : e.link.kind === 'junction' ? ' knot' : '') + ((cur.has(e.a) && cur.has(e.b)) ? ' lit' : '') }); gE.append(path); }
+  for (const n of nodes) {
+    const p = pos.get(n.id); const g = el('g', { class: 'node' + (cur.has(n.id) ? ' selected' : ' dim'), transform: `translate(${p.x - n.w / 2} ${p.y - n.h / 2})` });
+    g.style.setProperty('--gc', gcolor(n.group));
+    g.append(el('rect', { width: n.w, height: n.h }), el('circle', { cx: 14, cy: 20, r: 5, fill: gcolor(n.group) }), el('text', { x: 26, y: 25 }, n.title));
+    g.addEventListener('click', () => { showView('map'); select(n.id); });
+    gN.append(g);
+  }
+}
+
+// ---- words
+function renderWords() {
+  const w = $('#words'); w.innerHTML = '';
+  w.append(h('h2', {}, 'How to read the map'), h('p', { class: 'lede' }, 'Every box is a table: one kind of record the app keeps, like a location or a work log. Lines show how records point at each other.'));
+  const howto = h('div', { class: 'howto' });
+  const mk = (svgInner, title, text) => { const d = h('div'); d.innerHTML = `<svg viewBox="0 0 220 34">${svgInner}</svg>`; d.append(h('b', {}, title), h('span', {}, text)); howto.append(d); };
+  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--line-strong)" stroke-width="2"/>', 'Belongs to', 'A solid line means each record on one end belongs to one record on the other. A location belongs to a client; a client has many locations.');
+  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--loose)" stroke-width="2" stroke-dasharray="6 4"/>', 'Loose link', 'A dashed line means the app writes a reference, but the database never checks it. These can quietly point at deleted records.');
+  mk('<line x1="10" y1="17" x2="210" y2="17" stroke="var(--accent)" stroke-width="4"/>', 'Any combination', 'A thick teal line means the two kinds of records can be paired freely, like employees and the locations they are assigned to.');
+  mk('<circle cx="110" cy="17" r="6" fill="var(--auto)"/>', 'Automatic action', 'An amber dot on a box means something happens on its own when a record there is added or changed, such as an audit entry being written.');
+  mk('<rect x="10" y="4" width="200" height="26" rx="8" fill="var(--ground)" stroke="var(--line-strong)" stroke-dasharray="3 3"/>', 'From another group', 'A dashed box is a table from a different group, shown so you can see the connection. Click it to jump there.');
+  mk('<rect x="10" y="4" width="200" height="26" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/>', 'Hub', 'A thick border marks a table that many others point at. Users and locations are the hubs of this app.');
+  w.append(howto);
+  w.append(h('h2', {}, 'Words you will run into'));
+  const dl = h('dl');
+  for (const [k, v] of Object.entries(DATA.terms)) dl.append(h('dt', {}, k), h('dd', {}, v));
+  w.append(dl);
+}
+
+// ---- views
+function showView(v) {
+  state.view = v;
+  for (const b of document.querySelectorAll('.tabs button')) b.setAttribute('aria-selected', String(b.dataset.view === v));
+  for (const s of document.querySelectorAll('.view')) s.classList.toggle('active', s.id === `view-${v}`);
+  if (v === 'map') render(); if (v === 'flows') renderFlows(); if (v === 'words') renderWords();
+}
+for (const b of document.querySelectorAll('.tabs button')) b.addEventListener('click', () => showView(b.dataset.view));
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (state.view === 'map') render(); if (state.view === 'flows') renderFlows(); }, 120); });
+
+renderRail(); renderPanel(); render();
+})();
+</script>

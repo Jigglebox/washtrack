@@ -92,6 +92,8 @@ export type SqlFunction = {
   source?: string;
 };
 
+export type RouteRef = { path: string; guard: 'roles' | 'portal' | 'redirect' | 'none'; roles: string[] };
+
 export type CodeRef = {
   /** Path relative to repo root */
   file: string;
@@ -99,7 +101,49 @@ export type CodeRef = {
   /** Edge function folder name, or the file path for frontend code */
   label: string;
   tables: string[];
+  /** table -> operations seen after .from(table): select/insert/update/delete/upsert */
+  ops: Record<string, string[]>;
   rpcs: string[];
+  /** Edge functions invoked from this file */
+  invokes: string[];
+  /** Role names this file mentions in guards / role lists */
+  roles: string[];
+  /** Route definitions (route files only) */
+  routes: RouteRef[];
+  /** Edge functions only */
+  edge?: { usesServiceRole: boolean; checksCaller: boolean; checksRole: boolean };
+};
+
+export type Severity = 'high' | 'medium' | 'low' | 'info';
+
+export type Finding = {
+  /** Rule id, e.g. permissions/adhoc-role-check */
+  rule: string;
+  severity: Severity;
+  /** What the finding is about: a table, policy, function, edge function, file or route */
+  subjectKind: 'table' | 'policy' | 'function' | 'edge-function' | 'file' | 'route' | 'schema';
+  subject: string;
+  /** Table this finding should be shown on, if any */
+  table?: string;
+  message: string;
+  evidence?: string;
+};
+
+export type ChangeSet = {
+  baseline: string;
+  added: { kind: string; name: string; table?: string; detail?: string }[];
+  removed: { kind: string; name: string; table?: string; detail?: string }[];
+  changed: { kind: string; name: string; table?: string; detail: string }[];
+};
+
+export type Conventions = {
+  /** Role vocabulary (enum values) */
+  roles: string[];
+  roleEnum?: string;
+  /** SQL helper functions the existing policies rely on */
+  policyHelpers: string[];
+  /** Tables that carry role assignments */
+  roleTables: string[];
 };
 
 export type Cluster = {
@@ -124,6 +168,9 @@ export type SchemaGraph = {
   clusters: Cluster[];
   polymorphic: PolymorphicRef[];
   warnings: string[];
+  conventions: Conventions;
+  findings: Finding[];
+  changes?: ChangeSet;
 };
 
 export const EXTERNAL_TABLE_PREFIX = 'auth.';

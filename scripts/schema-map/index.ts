@@ -15,6 +15,7 @@ import { scanCode } from './parse-code.ts';
 import { replayMigrations } from './parse-sql.ts';
 import { parseTypesFile } from './parse-types.ts';
 import { renderDocs } from './write-docs.ts';
+import { renderExplorer } from './explorer.ts';
 
 type Args = Record<string, string | boolean>;
 function parseArgs(argv: string[]): Args {
@@ -46,6 +47,7 @@ Options:
   --min-hub-degree <n> minimum referencing tables for a hub (default 4)
   --db <url>           read the live database (or set SUPABASE_DB_URL / DATABASE_URL); read-only
   --no-db              ignore SUPABASE_DB_URL / DATABASE_URL
+  --descriptions <f>   plain-English descriptions for the explorer (default: docs/schema-descriptions.json)
   --check              do not write; exit 1 if the output dir is out of date
   --quiet              no summary`);
   process.exit(0);
@@ -88,7 +90,12 @@ if (dbUrl) {
   }
 }
 const graph = buildGraph(types!, mig, codeRefs, { hubRatio: Number(args['hub-ratio'] ?? 0.25), minHubDegree: Number(args['min-hub-degree'] ?? 4) }, { staticMig, live, liveSnapshot, extraWarnings });
-const files = renderDocs(graph, projectName);
+const descPath = resolve(root, String(args.descriptions ?? 'docs/schema-descriptions.json'));
+let descriptions = {};
+if (existsSync(descPath)) { try { descriptions = JSON.parse(readFileSync(descPath, 'utf8')); } catch (e) { console.error(`schema-map: could not read ${descPath}: ${(e as Error).message}`); } }
+const templatePath = new URL('./explorer.html', import.meta.url).pathname;
+const build = (gr: typeof graph) => { const f = renderDocs(gr, projectName); f.set('explorer.html', renderExplorer(gr, descriptions, projectName, templatePath)); return f; };
+const files = build(graph);
 
 // Keep output byte-stable across runs on the same inputs: the timestamp only changes when content changes.
 {
@@ -99,7 +106,7 @@ const files = renderDocs(graph, projectName);
       const sameExceptTime = JSON.stringify({ ...old, generatedAt: '' }) === JSON.stringify({ ...graph, generatedAt: '' });
       if (sameExceptTime && old.generatedAt) {
         graph.generatedAt = old.generatedAt;
-        const again = renderDocs(graph, projectName);
+        const again = build(graph);
         files.clear(); for (const [k, v] of again) files.set(k, v);
       }
     } catch { /* regenerate */ }

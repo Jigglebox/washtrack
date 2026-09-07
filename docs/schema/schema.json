@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-05T23:14:03.405Z",
+  "generatedAt": "2026-09-07T20:36:37.452Z",
   "live": {
     "connected": false
   },
@@ -7885,6 +7885,22 @@
   ],
   "codeRefs": [
     {
+      "file": "supabase/functions/_shared/welcome-email.ts",
+      "kind": "edge-function",
+      "label": "_shared",
+      "tables": [],
+      "ops": {},
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": false,
+        "checksCaller": false,
+        "checksRole": true
+      }
+    },
+    {
       "file": "supabase/functions/approve-portal-request/index.ts",
       "kind": "edge-function",
       "label": "approve-portal-request",
@@ -7893,7 +7909,27 @@
         "client_portal_location_access",
         "user_roles"
       ],
-      "rpcs": []
+      "ops": {
+        "user_roles": [
+          "select"
+        ],
+        "client_portal_access_requests": [
+          "select",
+          "update"
+        ],
+        "client_portal_location_access": [
+          "upsert"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": true
+      }
     },
     {
       "file": "supabase/functions/create-portal-user/index.ts",
@@ -7903,7 +7939,24 @@
         "client_portal_users",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "users": [
+          "select"
+        ],
+        "client_portal_users": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": false,
+        "checksRole": false
+      }
     },
     {
       "file": "supabase/functions/create-user/index.ts",
@@ -7913,7 +7966,26 @@
         "user_roles",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "users": [
+          "delete",
+          "insert",
+          "select"
+        ],
+        "user_roles": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": true
+      }
     },
     {
       "file": "supabase/functions/delete-portal-user/index.ts",
@@ -7924,9 +7996,29 @@
         "client_portal_location_access",
         "client_portal_users"
       ],
+      "ops": {
+        "client_portal_users": [
+          "delete",
+          "select"
+        ],
+        "client_portal_location_access": [
+          "delete"
+        ],
+        "client_portal_access_requests": [
+          "delete"
+        ]
+      },
       "rpcs": [
         "has_role_or_higher"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": true
+      }
     },
     {
       "file": "supabase/functions/delete-user/index.ts",
@@ -7935,9 +8027,22 @@
       "tables": [
         "users"
       ],
+      "ops": {
+        "users": [
+          "delete"
+        ]
+      },
       "rpcs": [
         "is_super_admin"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": true
+      }
     },
     {
       "file": "supabase/functions/ensure-portal-user/index.ts",
@@ -7947,7 +8052,24 @@
         "client_portal_users",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "users": [
+          "select"
+        ],
+        "client_portal_users": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": false
+      }
     },
     {
       "file": "supabase/functions/record-portal-login/index.ts",
@@ -7956,7 +8078,21 @@
       "tables": [
         "client_portal_users"
       ],
-      "rpcs": []
+      "ops": {
+        "client_portal_users": [
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": false
+      }
     },
     {
       "file": "supabase/functions/reset-user-password/index.ts",
@@ -7966,7 +8102,23 @@
         "user_roles",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "user_roles": [
+          "select"
+        ],
+        "users": [
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": true
+      }
     },
     {
       "file": "supabase/functions/send-error-report-email/index.ts",
@@ -7977,7 +8129,26 @@
         "user_roles",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "error_reports": [
+          "select"
+        ],
+        "user_roles": [
+          "select"
+        ],
+        "users": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": true
+      }
     },
     {
       "file": "supabase/functions/send-portal-password-reset/index.ts",
@@ -7987,7 +8158,23 @@
         "client_portal_users",
         "user_roles"
       ],
-      "rpcs": []
+      "ops": {
+        "user_roles": [
+          "select"
+        ],
+        "client_portal_users": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": true
+      }
     },
     {
       "file": "supabase/functions/send-welcome-email/index.ts",
@@ -7996,7 +8183,20 @@
       "tables": [
         "user_roles"
       ],
-      "rpcs": []
+      "ops": {
+        "user_roles": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": true
+      }
     },
     {
       "file": "supabase/functions/set-portal-approval/index.ts",
@@ -8006,9 +8206,26 @@
         "client_portal_location_access",
         "client_portal_users"
       ],
+      "ops": {
+        "client_portal_users": [
+          "select",
+          "update"
+        ],
+        "client_portal_location_access": [
+          "delete"
+        ]
+      },
       "rpcs": [
         "has_role_or_higher"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": true
+      }
     },
     {
       "file": "supabase/functions/submit-portal-onboarding/index.ts",
@@ -8017,7 +8234,21 @@
       "tables": [
         "client_portal_users"
       ],
-      "rpcs": []
+      "ops": {
+        "client_portal_users": [
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": true,
+        "checksRole": false
+      }
     },
     {
       "file": "supabase/functions/update-cutoff-date/index.ts",
@@ -8026,8 +8257,300 @@
       "tables": [
         "system_settings"
       ],
+      "ops": {
+        "system_settings": [
+          "select"
+        ]
+      },
       "rpcs": [
         "auto_update_cutoff_date"
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": [],
+      "edge": {
+        "usesServiceRole": true,
+        "checksCaller": false,
+        "checksRole": false
+      }
+    },
+    {
+      "file": "src/App.tsx",
+      "kind": "frontend",
+      "label": "src/App.tsx",
+      "tables": [],
+      "ops": {},
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": [
+        {
+          "path": "/login",
+          "guard": "none",
+          "roles": []
+        },
+        {
+          "path": "/privacy",
+          "guard": "none",
+          "roles": []
+        },
+        {
+          "path": "/change-password",
+          "guard": "none",
+          "roles": []
+        },
+        {
+          "path": "/unauthorized",
+          "guard": "none",
+          "roles": []
+        },
+        {
+          "path": "/portal/login",
+          "guard": "none",
+          "roles": []
+        },
+        {
+          "path": "/portal/signup",
+          "guard": "none",
+          "roles": []
+        },
+        {
+          "path": "/portal/auth/callback",
+          "guard": "none",
+          "roles": []
+        },
+        {
+          "path": "/portal",
+          "guard": "redirect",
+          "roles": []
+        },
+        {
+          "path": "/portal/onboarding",
+          "guard": "portal",
+          "roles": []
+        },
+        {
+          "path": "/portal/pending",
+          "guard": "portal",
+          "roles": []
+        },
+        {
+          "path": "/portal/dashboard",
+          "guard": "portal",
+          "roles": []
+        },
+        {
+          "path": "/portal/request-access",
+          "guard": "portal",
+          "roles": []
+        },
+        {
+          "path": "/portal/messages",
+          "guard": "portal",
+          "roles": []
+        },
+        {
+          "path": "/portal/locations/:id",
+          "guard": "portal",
+          "roles": []
+        },
+        {
+          "path": "/portal/locations/:id/request-wash",
+          "guard": "portal",
+          "roles": []
+        },
+        {
+          "path": "/admin/portal-requests",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/portal-users",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/",
+          "guard": "none",
+          "roles": []
+        },
+        {
+          "path": "/employee/dashboard",
+          "guard": "roles",
+          "roles": [
+            "employee",
+            "manager",
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/messages",
+          "guard": "roles",
+          "roles": [
+            "employee",
+            "manager",
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/manager/dashboard",
+          "guard": "roles",
+          "roles": [
+            "manager",
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/finance/dashboard",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/finance/this-week",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/finance/dealership",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/dealership-rates",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/dealership-requests",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/dashboard",
+          "guard": "roles",
+          "roles": [
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/users",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/users/create",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/locations",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/clients",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/work-types",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/rates",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/items",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/settings",
+          "guard": "roles",
+          "roles": [
+            "admin"
+          ]
+        },
+        {
+          "path": "/admin/database",
+          "guard": "roles",
+          "roles": [
+            "super_admin"
+          ]
+        },
+        {
+          "path": "/admin/activity-logs",
+          "guard": "roles",
+          "roles": [
+            "super_admin"
+          ]
+        },
+        {
+          "path": "/payroll",
+          "guard": "redirect",
+          "roles": []
+        },
+        {
+          "path": "/payroll/dashboard",
+          "guard": "roles",
+          "roles": [
+            "finance",
+            "admin"
+          ]
+        },
+        {
+          "path": "*",
+          "guard": "none",
+          "roles": []
+        }
       ]
     },
     {
@@ -8038,7 +8561,19 @@
         "rate_configs",
         "work_items"
       ],
-      "rpcs": []
+      "ops": {
+        "rate_configs": [
+          "select"
+        ],
+        "work_items": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/CSVImportModal.tsx",
@@ -8051,7 +8586,30 @@
         "work_items",
         "work_types"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "select"
+        ],
+        "rate_configs": [
+          "insert",
+          "select",
+          "update"
+        ],
+        "work_types": [
+          "insert",
+          "select"
+        ],
+        "work_items": [
+          "insert"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/ClientSetupWizard.tsx",
@@ -8061,7 +8619,20 @@
         "clients",
         "locations"
       ],
-      "rpcs": []
+      "ops": {
+        "locations": [
+          "insert",
+          "select"
+        ],
+        "clients": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/CreateClientInlineModal.tsx",
@@ -8070,7 +8641,16 @@
       "tables": [
         "clients"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/CreateLocationInlineModal.tsx",
@@ -8079,7 +8659,16 @@
       "tables": [
         "locations"
       ],
-      "rpcs": []
+      "ops": {
+        "locations": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/CreateLocationModal.tsx",
@@ -8089,7 +8678,19 @@
         "clients",
         "locations"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/CreateUserModal.tsx",
@@ -8100,7 +8701,24 @@
         "user_locations",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "locations": [
+          "select"
+        ],
+        "users": [
+          "select"
+        ],
+        "user_locations": [
+          "insert"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [
+        "create-user",
+        "send-welcome-email"
+      ],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/EditLocationModal.tsx",
@@ -8110,7 +8728,19 @@
         "clients",
         "locations"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/EditServiceModal.tsx",
@@ -8121,7 +8751,21 @@
         "work_items",
         "work_types"
       ],
-      "rpcs": []
+      "ops": {
+        "work_types": [
+          "select"
+        ],
+        "work_items": [
+          "update"
+        ],
+        "rate_configs": [
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/EditUserModal.tsx",
@@ -8133,7 +8777,28 @@
         "user_roles",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "locations": [
+          "select"
+        ],
+        "user_locations": [
+          "delete",
+          "insert",
+          "select"
+        ],
+        "users": [
+          "select",
+          "update"
+        ],
+        "user_roles": [
+          "delete",
+          "insert"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/EmployeeCommentSection.tsx",
@@ -8143,7 +8808,19 @@
         "employee_comments",
         "message_replies"
       ],
-      "rpcs": []
+      "ops": {
+        "employee_comments": [
+          "insert",
+          "select"
+        ],
+        "message_replies": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/ErrorReportButton.tsx",
@@ -8152,7 +8829,31 @@
       "tables": [
         "error_reports"
       ],
-      "rpcs": []
+      "ops": {
+        "error_reports": [
+          "insert"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
+    },
+    {
+      "file": "src/components/Layout.tsx",
+      "kind": "frontend",
+      "label": "src/components/Layout.tsx",
+      "tables": [],
+      "ops": {},
+      "rpcs": [],
+      "invokes": [],
+      "roles": [
+        "admin",
+        "employee",
+        "finance",
+        "manager"
+      ],
+      "routes": []
     },
     {
       "file": "src/components/LocationTable.tsx",
@@ -8162,7 +8863,18 @@
         "clients",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "users": [
+          "select"
+        ],
+        "clients": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/LogWorkModal.tsx",
@@ -8171,7 +8883,28 @@
       "tables": [
         "work_logs"
       ],
-      "rpcs": []
+      "ops": {
+        "work_logs": [
+          "insert"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
+    },
+    {
+      "file": "src/components/ModeSwitcher.tsx",
+      "kind": "frontend",
+      "label": "src/components/ModeSwitcher.tsx",
+      "tables": [],
+      "ops": {},
+      "rpcs": [],
+      "invokes": [],
+      "roles": [
+        "finance"
+      ],
+      "routes": []
     },
     {
       "file": "src/components/MyErrorReports.tsx",
@@ -8181,9 +8914,21 @@
         "error_report_replies",
         "error_reports"
       ],
+      "ops": {
+        "error_reports": [
+          "select"
+        ],
+        "error_report_replies": [
+          "insert",
+          "select"
+        ]
+      },
       "rpcs": [
         "get_user_display_info"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/UserSearchInput.tsx",
@@ -8192,7 +8937,30 @@
       "tables": [
         "users_safe_view"
       ],
-      "rpcs": []
+      "ops": {
+        "users_safe_view": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
+    },
+    {
+      "file": "src/components/UserTable.tsx",
+      "kind": "frontend",
+      "label": "src/components/UserTable.tsx",
+      "tables": [],
+      "ops": {},
+      "rpcs": [],
+      "invokes": [
+        "delete-user",
+        "reset-user-password",
+        "send-welcome-email"
+      ],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/WorkItemGrid.tsx",
@@ -8201,7 +8969,15 @@
       "tables": [
         "work_items"
       ],
-      "rpcs": []
+      "ops": {
+        "work_items": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/dealership/DealershipWashCard.tsx",
@@ -8210,7 +8986,15 @@
       "tables": [
         "locations"
       ],
-      "rpcs": []
+      "ops": {
+        "locations": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/dealership/RequestDealershipLocationModal.tsx",
@@ -8220,7 +9004,18 @@
         "clients",
         "locations"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/reports/ReportFilters.tsx",
@@ -8231,7 +9026,21 @@
         "locations",
         "work_types"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "select"
+        ],
+        "work_types": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/reports/TemplateManager.tsx",
@@ -8240,7 +9049,17 @@
       "tables": [
         "report_templates"
       ],
-      "rpcs": []
+      "ops": {
+        "report_templates": [
+          "delete",
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/tickets/SubmitTicketModal.tsx",
@@ -8252,7 +9071,25 @@
         "ticket_line_items",
         "tickets"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "select"
+        ],
+        "tickets": [
+          "insert",
+          "select"
+        ],
+        "ticket_line_items": [
+          "insert"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/components/tickets/TicketList.tsx",
@@ -8263,9 +9100,25 @@
         "ticket_replies",
         "tickets"
       ],
+      "ops": {
+        "tickets": [
+          "select",
+          "update"
+        ],
+        "ticket_line_items": [
+          "select"
+        ],
+        "ticket_replies": [
+          "insert",
+          "select"
+        ]
+      },
       "rpcs": [
         "get_user_display_info"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/contexts/AuthContext.tsx",
@@ -8277,7 +9130,24 @@
         "user_locations",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "users": [
+          "select"
+        ],
+        "client_portal_users": [
+          "select"
+        ],
+        "locations": [
+          "select"
+        ],
+        "user_locations": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/hooks/usePendingPortalRequestCount.ts",
@@ -8287,7 +9157,18 @@
         "client_portal_access_requests",
         "client_portal_users"
       ],
-      "rpcs": []
+      "ops": {
+        "client_portal_access_requests": [
+          "select"
+        ],
+        "client_portal_users": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/hooks/usePortalUnreadCount.ts",
@@ -8298,7 +9179,22 @@
         "message_replies",
         "user_message_views"
       ],
-      "rpcs": []
+      "ops": {
+        "user_message_views": [
+          "select",
+          "upsert"
+        ],
+        "message_replies": [
+          "select"
+        ],
+        "error_report_replies": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/hooks/useUnreadMessageCount.ts",
@@ -8308,7 +9204,19 @@
         "employee_comments",
         "user_message_views"
       ],
-      "rpcs": []
+      "ops": {
+        "user_message_views": [
+          "select",
+          "upsert"
+        ],
+        "employee_comments": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/hooks/useUnreadTicketCount.ts",
@@ -8318,7 +9226,21 @@
         "ticket_views",
         "tickets"
       ],
-      "rpcs": []
+      "ops": {
+        "ticket_views": [
+          "select",
+          "upsert"
+        ],
+        "tickets": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [
+        "finance"
+      ],
+      "routes": []
     },
     {
       "file": "src/lib/cutoff.ts",
@@ -8328,7 +9250,20 @@
         "system_settings",
         "system_settings_audit"
       ],
-      "rpcs": []
+      "ops": {
+        "system_settings": [
+          "select",
+          "update"
+        ],
+        "system_settings_audit": [
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/lib/dealershipRates.ts",
@@ -8337,7 +9272,15 @@
       "tables": [
         "system_settings"
       ],
-      "rpcs": []
+      "ops": {
+        "system_settings": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/lib/roleUtils.ts",
@@ -8346,16 +9289,28 @@
       "tables": [
         "user_roles"
       ],
-      "rpcs": []
+      "ops": {
+        "user_roles": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/ActivityLogs.tsx",
       "kind": "frontend",
       "label": "src/pages/ActivityLogs.tsx",
       "tables": [],
+      "ops": {},
       "rpcs": [
         "get_user_display_info"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/AdminDashboard.tsx",
@@ -8368,9 +9323,31 @@
         "locations",
         "users"
       ],
+      "ops": {
+        "error_report_replies": [
+          "insert",
+          "select"
+        ],
+        "error_reports": [
+          "select",
+          "update"
+        ],
+        "users": [
+          "select"
+        ],
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "select"
+        ]
+      },
       "rpcs": [
         "get_user_display_info"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/AdminSettings.tsx",
@@ -8380,7 +9357,18 @@
         "system_settings_audit",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "users": [
+          "select"
+        ],
+        "system_settings_audit": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/ChangePassword.tsx",
@@ -8389,9 +9377,17 @@
       "tables": [
         "users"
       ],
+      "ops": {
+        "users": [
+          "update"
+        ]
+      },
       "rpcs": [
         "get_portal_account_status"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/Clients.tsx",
@@ -8400,7 +9396,18 @@
       "tables": [
         "clients"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "delete",
+          "insert",
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/CreateUser.tsx",
@@ -8411,7 +9418,21 @@
         "users",
         "users_safe_view"
       ],
-      "rpcs": []
+      "ops": {
+        "locations": [
+          "select"
+        ],
+        "users_safe_view": [
+          "select"
+        ],
+        "users": [
+          "insert"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/EmployeeDashboard.tsx",
@@ -8425,16 +9446,47 @@
         "work_items",
         "work_logs"
       ],
-      "rpcs": []
+      "ops": {
+        "locations": [
+          "select"
+        ],
+        "rate_configs": [
+          "select"
+        ],
+        "work_items": [
+          "select"
+        ],
+        "work_logs": [
+          "delete",
+          "insert",
+          "select",
+          "update"
+        ],
+        "employee_comments": [
+          "insert",
+          "select"
+        ],
+        "message_replies": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/FinanceDashboard.tsx",
       "kind": "frontend",
       "label": "src/pages/FinanceDashboard.tsx",
       "tables": [],
+      "ops": {},
       "rpcs": [
         "get_report_data"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/FinanceThisWeek.tsx",
@@ -8449,7 +9501,33 @@
         "work_logs",
         "work_types"
       ],
-      "rpcs": []
+      "ops": {
+        "users": [
+          "select"
+        ],
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "select"
+        ],
+        "work_types": [
+          "select"
+        ],
+        "work_logs": [
+          "select"
+        ],
+        "rate_configs": [
+          "select"
+        ],
+        "work_items": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/Locations.tsx",
@@ -8458,7 +9536,16 @@
       "tables": [
         "locations"
       ],
-      "rpcs": []
+      "ops": {
+        "locations": [
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/Messages.tsx",
@@ -8471,9 +9558,34 @@
         "message_reads",
         "message_replies"
       ],
+      "ops": {
+        "locations": [
+          "select"
+        ],
+        "employee_comments": [
+          "insert",
+          "select"
+        ],
+        "message_replies": [
+          "insert",
+          "select"
+        ],
+        "message_reads": [
+          "insert",
+          "select"
+        ],
+        "client_portal_users": [
+          "select"
+        ]
+      },
       "rpcs": [
         "get_user_display_info"
-      ]
+      ],
+      "invokes": [],
+      "roles": [
+        "finance"
+      ],
+      "routes": []
     },
     {
       "file": "src/pages/RateCard.tsx",
@@ -8485,7 +9597,30 @@
         "rate_configs",
         "work_types"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "select"
+        ],
+        "work_types": [
+          "select"
+        ],
+        "rate_configs": [
+          "delete",
+          "insert",
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [
+        "admin",
+        "finance"
+      ],
+      "routes": []
     },
     {
       "file": "src/pages/Users.tsx",
@@ -8497,7 +9632,26 @@
         "user_roles",
         "users"
       ],
-      "rpcs": []
+      "ops": {
+        "users": [
+          "insert",
+          "select"
+        ],
+        "locations": [
+          "select"
+        ],
+        "user_locations": [
+          "select"
+        ],
+        "user_roles": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/WorkItems.tsx",
@@ -8510,7 +9664,32 @@
         "work_items",
         "work_types"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "select"
+        ],
+        "work_types": [
+          "select"
+        ],
+        "rate_configs": [
+          "select"
+        ],
+        "work_items": [
+          "delete",
+          "insert",
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [
+        "admin"
+      ],
+      "routes": []
     },
     {
       "file": "src/pages/WorkTypes.tsx",
@@ -8519,7 +9698,20 @@
       "tables": [
         "work_types"
       ],
-      "rpcs": []
+      "ops": {
+        "work_types": [
+          "delete",
+          "insert",
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [
+        "finance"
+      ],
+      "routes": []
     },
     {
       "file": "src/pages/admin/PortalRequests.tsx",
@@ -8531,7 +9723,31 @@
         "client_portal_users",
         "locations"
       ],
-      "rpcs": []
+      "ops": {
+        "client_portal_access_requests": [
+          "select"
+        ],
+        "client_portal_users": [
+          "select",
+          "update"
+        ],
+        "locations": [
+          "select"
+        ],
+        "client_portal_location_access": [
+          "upsert"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [
+        "approve-portal-request",
+        "delete-portal-user",
+        "set-portal-approval"
+      ],
+      "roles": [
+        "finance"
+      ],
+      "routes": []
     },
     {
       "file": "src/pages/admin/PortalUsers.tsx",
@@ -8542,9 +9758,28 @@
         "client_portal_users",
         "locations"
       ],
+      "ops": {
+        "client_portal_users": [
+          "select",
+          "update"
+        ],
+        "locations": [
+          "select"
+        ],
+        "client_portal_location_access": [
+          "delete",
+          "insert"
+        ]
+      },
       "rpcs": [
         "get_portal_users_email_auth"
-      ]
+      ],
+      "invokes": [
+        "delete-portal-user",
+        "send-portal-password-reset"
+      ],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/dealership/DealershipRates.tsx",
@@ -8555,16 +9790,35 @@
         "locations",
         "system_settings"
       ],
-      "rpcs": []
+      "ops": {
+        "clients": [
+          "select"
+        ],
+        "locations": [
+          "select"
+        ],
+        "system_settings": [
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/dealership/DealershipReport.tsx",
       "kind": "frontend",
       "label": "src/pages/dealership/DealershipReport.tsx",
       "tables": [],
+      "ops": {},
       "rpcs": [
         "get_dealership_report_data"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/dealership/DealershipRequests.tsx",
@@ -8575,9 +9829,25 @@
         "locations",
         "user_locations"
       ],
+      "ops": {
+        "clients": [
+          "insert",
+          "select"
+        ],
+        "locations": [
+          "insert",
+          "select"
+        ],
+        "user_locations": [
+          "insert"
+        ]
+      },
       "rpcs": [
         "get_user_display_info"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/payroll/PayrollDashboard.tsx",
@@ -8593,7 +9863,45 @@
         "users_safe_view",
         "work_logs"
       ],
-      "rpcs": []
+      "ops": {
+        "payroll_pay_codes": [
+          "insert",
+          "select"
+        ],
+        "users_safe_view": [
+          "select"
+        ],
+        "payroll_employee_lines": [
+          "insert",
+          "select"
+        ],
+        "payroll_periods": [
+          "select",
+          "update",
+          "upsert"
+        ],
+        "payroll_run_lines": [
+          "delete",
+          "insert",
+          "select",
+          "update"
+        ],
+        "work_logs": [
+          "select"
+        ],
+        "payroll_work_type_map": [
+          "select"
+        ],
+        "payroll_hours_imports": [
+          "delete",
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/portal/PortalAuthCallback.tsx",
@@ -8602,29 +9910,48 @@
       "tables": [
         "system_settings"
       ],
+      "ops": {
+        "system_settings": [
+          "select"
+        ]
+      },
       "rpcs": [
         "get_portal_my_locations"
-      ]
+      ],
+      "invokes": [
+        "ensure-portal-user",
+        "record-portal-login"
+      ],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/portal/PortalDashboard.tsx",
       "kind": "frontend",
       "label": "src/pages/portal/PortalDashboard.tsx",
       "tables": [],
+      "ops": {},
       "rpcs": [
         "get_portal_my_locations"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/portal/PortalLocationHistory.tsx",
       "kind": "frontend",
       "label": "src/pages/portal/PortalLocationHistory.tsx",
       "tables": [],
+      "ops": {},
       "rpcs": [
         "get_portal_dealership_history",
         "get_portal_my_locations",
         "get_portal_work_history"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/portal/PortalLogin.tsx",
@@ -8633,7 +9960,17 @@
       "tables": [
         "system_settings"
       ],
-      "rpcs": []
+      "ops": {
+        "system_settings": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [
+        "record-portal-login"
+      ],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/portal/PortalMessages.tsx",
@@ -8643,10 +9980,36 @@
         "employee_comments",
         "message_replies"
       ],
+      "ops": {
+        "employee_comments": [
+          "insert",
+          "select"
+        ],
+        "message_replies": [
+          "insert",
+          "select"
+        ]
+      },
       "rpcs": [
         "get_portal_my_locations",
         "get_user_display_info"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
+    },
+    {
+      "file": "src/pages/portal/PortalOnboarding.tsx",
+      "kind": "frontend",
+      "label": "src/pages/portal/PortalOnboarding.tsx",
+      "tables": [],
+      "ops": {},
+      "rpcs": [],
+      "invokes": [
+        "submit-portal-onboarding"
+      ],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/portal/PortalRequestAccess.tsx",
@@ -8657,7 +10020,22 @@
         "client_portal_users",
         "locations"
       ],
-      "rpcs": []
+      "ops": {
+        "locations": [
+          "select"
+        ],
+        "client_portal_users": [
+          "select"
+        ],
+        "client_portal_access_requests": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invokes": [],
+      "roles": [],
+      "routes": []
     },
     {
       "file": "src/pages/portal/PortalRequestWash.tsx",
@@ -8667,10 +10045,34 @@
         "client_portal_users",
         "employee_comments"
       ],
+      "ops": {
+        "client_portal_users": [
+          "select"
+        ],
+        "employee_comments": [
+          "insert"
+        ]
+      },
       "rpcs": [
         "get_portal_location_work_items",
         "get_portal_my_locations"
-      ]
+      ],
+      "invokes": [],
+      "roles": [],
+      "routes": []
+    },
+    {
+      "file": "src/pages/portal/PortalSignup.tsx",
+      "kind": "frontend",
+      "label": "src/pages/portal/PortalSignup.tsx",
+      "tables": [],
+      "ops": {},
+      "rpcs": [],
+      "invokes": [
+        "create-portal-user"
+      ],
+      "roles": [],
+      "routes": []
     }
   ],
   "clusters": [

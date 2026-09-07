@@ -1,6 +1,6 @@
 # Functions, triggers and code coupling
 
-_Generated 2026-09-05 by `scripts/schema-map`. Do not edit by hand; run `npm run schema:map`._
+_Generated 2026-09-07 by `scripts/schema-map`. Do not edit by hand; run `npm run schema:map`._
 
 [Back to overview](README.md)
 
@@ -121,6 +121,7 @@ flowchart LR
 ```mermaid
 flowchart LR
   subgraph code["Edge functions"]
+    c__shared["_shared"]
     c_approve_portal_request["approve-portal-request"]
     c_create_portal_user["create-portal-user"]
     c_create_user["create-user"]
@@ -186,6 +187,7 @@ Which source files query which tables. Only files with direct `supabase.from()` 
 
 | File | Tables | RPCs |
 | --- | --- | --- |
+| `src/App.tsx` |  |  |
 | `src/components/AddVehicleModal.tsx` | [rate_configs](tables/rate_configs.md), [work_items](tables/work_items.md) |  |
 | `src/components/CSVImportModal.tsx` | [clients](tables/clients.md), [locations](tables/locations.md), [rate_configs](tables/rate_configs.md), [work_items](tables/work_items.md), [work_types](tables/work_types.md) |  |
 | `src/components/ClientSetupWizard.tsx` | [clients](tables/clients.md), [locations](tables/locations.md) |  |
@@ -198,10 +200,13 @@ Which source files query which tables. Only files with direct `supabase.from()` 
 | `src/components/EditUserModal.tsx` | [locations](tables/locations.md), [user_locations](tables/user_locations.md), [user_roles](tables/user_roles.md), [users](tables/users.md) |  |
 | `src/components/EmployeeCommentSection.tsx` | [employee_comments](tables/employee_comments.md), [message_replies](tables/message_replies.md) |  |
 | `src/components/ErrorReportButton.tsx` | [error_reports](tables/error_reports.md) |  |
+| `src/components/Layout.tsx` |  |  |
 | `src/components/LocationTable.tsx` | [clients](tables/clients.md), [users](tables/users.md) |  |
 | `src/components/LogWorkModal.tsx` | [work_logs](tables/work_logs.md) |  |
+| `src/components/ModeSwitcher.tsx` |  |  |
 | `src/components/MyErrorReports.tsx` | [error_report_replies](tables/error_report_replies.md), [error_reports](tables/error_reports.md) | `get_user_display_info` |
 | `src/components/UserSearchInput.tsx` | [users_safe_view](tables/users_safe_view.md) |  |
+| `src/components/UserTable.tsx` |  |  |
 | `src/components/WorkItemGrid.tsx` | [work_items](tables/work_items.md) |  |
 | `src/components/dealership/DealershipWashCard.tsx` | [locations](tables/locations.md) |  |
 | `src/components/dealership/RequestDealershipLocationModal.tsx` | [clients](tables/clients.md), [locations](tables/locations.md) |  |
@@ -243,5 +248,7 @@ Which source files query which tables. Only files with direct `supabase.from()` 
 | `src/pages/portal/PortalLocationHistory.tsx` |  | `get_portal_dealership_history`, `get_portal_my_locations`, `get_portal_work_history` |
 | `src/pages/portal/PortalLogin.tsx` | [system_settings](tables/system_settings.md) |  |
 | `src/pages/portal/PortalMessages.tsx` | [employee_comments](tables/employee_comments.md), [message_replies](tables/message_replies.md) | `get_portal_my_locations`, `get_user_display_info` |
+| `src/pages/portal/PortalOnboarding.tsx` |  |  |
 | `src/pages/portal/PortalRequestAccess.tsx` | [client_portal_access_requests](tables/client_portal_access_requests.md), [client_portal_users](tables/client_portal_users.md), [locations](tables/locations.md) |  |
 | `src/pages/portal/PortalRequestWash.tsx` | [client_portal_users](tables/client_portal_users.md), [employee_comments](tables/employee_comments.md) | `get_portal_location_work_items`, `get_portal_my_locations` |
+| `src/pages/portal/PortalSignup.tsx` |  |  |

@@ -1,6 +1,6 @@
 # Table: message_reads
 
-_Generated 2026-09-05 by `scripts/schema-map`. Do not edit by hand; run `npm run schema:map`._
+_Generated 2026-09-07 by `scripts/schema-map`. Do not edit by hand; run `npm run schema:map`._
 
 [Back to overview](../README.md) · Domain: [employee_comments](../clusters/employee_comments.md)
 

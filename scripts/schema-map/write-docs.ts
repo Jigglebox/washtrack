@@ -57,6 +57,7 @@ export function renderDocs(g: SchemaGraph, projectName: string): Map<string, str
     '## Hub tables', '',
     mdTable(['Table', 'Referenced by (tables)'], g.tables.filter((t) => t.isHub).map((t) => [tableLink(t.name, 'root'), String(t.inboundDegree)])) || '_none_', '',
     '## Other pages', '',
+    `- **[Interactive explorer](explorer.html)**: the same map as a click-around page written for non-developers. Open the file in a browser (GitHub shows its source, not the page).`,
     `- [Functions, triggers and code coupling](functions.md)`,
     `- [RLS policy matrix](policies.md)`,
     `- ${code('schema.json')}: the whole graph as data, for other tooling`, '',
