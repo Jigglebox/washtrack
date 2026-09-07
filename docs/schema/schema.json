@@ -10583,18 +10583,9 @@
     }
   ],
   "changes": {
-    "baseline": "git HEAD (662d135)",
+    "baseline": "git HEAD (2e66473)",
     "added": [],
-    "removed": [
-      {
-        "kind": "code file",
-        "name": "src/components/Layout.tsx"
-      },
-      {
-        "kind": "code file",
-        "name": "src/components/ModeSwitcher.tsx"
-      }
-    ],
+    "removed": [],
     "changed": []
   }
 }

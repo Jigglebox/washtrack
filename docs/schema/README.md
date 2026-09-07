@@ -1,4 +1,4 @@
-# washtrack-main schema map
+# WashTrack schema map
 
 _Generated 2026-09-07 by `scripts/schema-map`. Do not edit by hand; run `npm run schema:map`._
 

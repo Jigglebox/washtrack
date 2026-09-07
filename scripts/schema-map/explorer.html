@@ -90,7 +90,9 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
 .link.lit { stroke: var(--accent); stroke-width: 2.5; }
 .link.lit.loose { stroke: var(--accent); }
 .dim { opacity: .18; }
-.node { cursor: pointer; }
+.node { cursor: grab; }
+.node.dragging { cursor: grabbing; }
+.node.dragging rect { filter: drop-shadow(0 6px 12px rgba(0,0,0,.18)); }
 .node rect { fill: var(--surface); stroke: var(--gc); stroke-width: 1.5; rx: 9; transition: stroke-width .15s; }
 .node.stub rect { fill: var(--ground); stroke-dasharray: 3 3; }
 .node.hub rect { stroke-width: 2.5; }
@@ -205,7 +207,8 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
     </aside>
     <div class="canvas" id="canvas">
       <div class="crumbs" id="crumbs"></div>
-      <div class="tools"><button id="btn-all" aria-pressed="false">Show every table</button></div>
+      <div class="tools"><button id="btn-tidy" title="Forget the positions you dragged and lay this view out again">Tidy up</button><button id="btn-all" aria-pressed="false">Show every table</button></div>
+      <div class="hint">Drag any box to move it. The lines follow, and your arrangement is remembered on this device.</div>
       <svg id="svg" role="img" aria-label="Map of database tables and their connections"></svg>
       <div class="legend"><span><i></i> belongs to</span><span><i class="dash"></i> loose link</span><span><i class="knot"></i> any combination</span><span><b></b> automatic action</span></div>
       <div class="tooltip" id="tip"></div>
@@ -217,7 +220,7 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
     <aside class="flowlist" id="flowlist"></aside>
     <div class="flowbody">
       <div class="steps" id="steps"></div>
-      <div class="flowmap" id="flowmap"><div class="hint">Tables involved in this story. The current step is highlighted.</div><svg id="flowsvg"></svg></div>
+      <div class="flowmap" id="flowmap"><div class="hint">Tables involved in this story. The current step is highlighted. Drag boxes to rearrange.</div><svg id="flowsvg"></svg></div>
     </div>
   </section>
 
@@ -263,6 +266,57 @@ function phrase(l) {
 
 // ---- state
 const state = { level: 'groups', group: null, selected: null, view: 'map' };
+
+// ---- remembered positions (per view, per device)
+const store = {
+  key: () => `wt-map:${state.level}:${state.group || ''}`,
+  load(k) { try { return JSON.parse(localStorage.getItem(k) || '{}'); } catch { return {}; } },
+  save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode etc. */ } },
+  clear(k) { try { localStorage.removeItem(k); } catch { /* ignore */ } },
+};
+function applySaved(pos, W, H, k) { const saved = store.load(k); for (const [id, [fx, fy]] of Object.entries(saved)) { const p = pos.get(id); if (p) { p.x = fx * W; p.y = fy * H; } } }
+function remember(id, p, W, H, k) { const saved = store.load(k); saved[id] = [p.x / W, p.y / H]; store.save(k, saved); }
+
+// ---- ring layout: one hub in the middle, members around it, stubs in an outer ring
+function ringLayout(nodes, edges, W, H) {
+  const pos = new Map();
+  const deg = new Map(); for (const e of edges) { deg.set(e.a, (deg.get(e.a) || 0) + 1); deg.set(e.b, (deg.get(e.b) || 0) + 1); }
+  const members = nodes.filter((n) => !n.stub), stubs = nodes.filter((n) => n.stub);
+  const cx = W / 2, cy = H / 2;
+  const ordered = (list) => { // walk neighbours so connected boxes sit next to each other
+    const left = new Set(list.map((n) => n.id)); const out = [];
+    let cur = list.slice().sort((a, b) => (deg.get(b.id) || 0) - (deg.get(a.id) || 0) || a.id.localeCompare(b.id))[0];
+    while (cur) { out.push(cur); left.delete(cur.id); const nb = edges.filter((e) => e.a === cur.id || e.b === cur.id).map((e) => (e.a === cur.id ? e.b : e.a)).find((id) => left.has(id)); cur = nb ? list.find((n) => n.id === nb) : list.find((n) => left.has(n.id)); }
+    return out;
+  };
+  let ring = members, center = null;
+  if (members.length > 3) { center = members.slice().sort((a, b) => (deg.get(b.id) || 0) - (deg.get(a.id) || 0) || a.id.localeCompare(b.id))[0]; ring = members.filter((n) => n !== center); }
+  if (center) pos.set(center.id, { x: cx, y: cy });
+  const place = (list, rx, ry, offset) => { const o = ordered(list); o.forEach((n, i) => { const a = -Math.PI / 2 + offset + (i / o.length) * Math.PI * 2; pos.set(n.id, { x: cx + Math.cos(a) * rx, y: cy + Math.sin(a) * ry }); }); };
+  const maxW = Math.max(...nodes.map((n) => n.w || 120));
+  const innerRx = Math.min(W / 2 - maxW / 2 - 20, Math.max(170, ring.length * (maxW + 20) / (2 * Math.PI))), innerRy = Math.min(H / 2 - 50, Math.max(120, ring.length * 62 / (2 * Math.PI)));
+  place(ring, innerRx, innerRy, 0);
+  if (stubs.length) place(stubs, Math.min(W / 2 - maxW / 2 - 10, innerRx + maxW * .9 + 30), Math.min(H / 2 - 30, innerRy + 80), Math.PI / stubs.length);
+  return pos;
+}
+
+// ---- drag: move a box, keep the lines attached, remember where it went
+function draggable(g, id, pos, svgEl, { onMove, onClick, onDrop }) {
+  let start = null, moved = false;
+  g.addEventListener('pointerdown', (ev) => { if (ev.button !== 0) return; const p = pos.get(id); start = { x: ev.clientX, y: ev.clientY, px: p.x, py: p.y }; moved = false; g.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+  g.addEventListener('pointermove', (ev) => {
+    if (!start) return;
+    const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
+    if (!moved && Math.hypot(dx, dy) < 4) return;
+    if (!moved) { moved = true; g.classList.add('dragging'); hideTip(); }
+    const vb = svgEl.viewBox.baseVal; const scale = vb.width / svgEl.clientWidth;
+    const p = pos.get(id); p.x = Math.max(20, Math.min(vb.width - 20, start.px + dx * scale)); p.y = Math.max(20, Math.min(vb.height - 20, start.py + dy * scale));
+    onMove();
+  });
+  const finish = (ev) => { if (!start) return; try { g.releasePointerCapture(ev.pointerId); } catch { /* ignore */ } g.classList.remove('dragging'); if (moved) onDrop(); else onClick(); start = null; };
+  g.addEventListener('pointerup', finish);
+  g.addEventListener('pointercancel', (ev) => { start = null; moved = false; g.classList.remove('dragging'); try { g.releasePointerCapture(ev.pointerId); } catch { /* ignore */ } });
+}
 
 // ---- layout (tiny force simulation, seeded so it is stable)
 function seeded(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return ((s >>> 0) % 10000) / 10000; }; }
@@ -376,19 +430,27 @@ function render() {
     nodes = [...shown].filter((n) => tables.has(n)).map((n) => { const t = tables.get(n); return { id: n, title: t.label, sub: set.has(n) ? '' : `in ${groups.find((g) => g.name === t.group)?.label || 'another group'}`, group: t.group, kind: 'table', stub: !set.has(n), hub: t.isHub, auto: t.triggers.length > 0, flag: t.notes && t.notes.length > 0, w: Math.max(110, t.label.length * 8 + 30), h: set.has(n) ? 40 : 44 }; });
   }
   current = { nodes, edges };
-  const pos = layout(nodes, edges.map((e) => ({ a: e.a, b: e.b, w: e.kind === 'grouplink' ? 1 + Math.log(e.n) : 1, len: e.kind === 'grouplink' ? 1.3 : 1 })), W, H, { pad: state.level === 'groups' ? 110 : 80, seed: state.level === 'groups' ? 3 : 5 });
+  const simple = edges.map((e) => ({ a: e.a, b: e.b, w: e.kind === 'grouplink' ? 1 + Math.log(e.n) : 1, len: e.kind === 'grouplink' ? 1.3 : 1 }));
+  const pos = state.level === 'all' ? layout(nodes, simple, W, H, { pad: 80, seed: 5 }) : ringLayout(nodes, simple, W, H);
+  const storeKey = store.key();
+  applySaved(pos, W, H, storeKey);
+  const geometry = () => {
+    for (const e of edges) { if (!e.path) continue; const pa = pos.get(e.a), pb = pos.get(e.b); const d = edgePath(pa, pb, e.a, e.b, e.curve); e.path.setAttribute('d', d); e.hit.setAttribute('d', d); if (e.labelBg) { const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2; e.labelBg.setAttribute('x', mx - 9); e.labelBg.setAttribute('y', my - 8); e.labelText.setAttribute('x', mx); e.labelText.setAttribute('y', my + 4); } }
+    for (const n of nodes) if (n.el) { const p = pos.get(n.id); n.el.setAttribute('transform', `translate(${p.x - n.w / 2} ${p.y - n.h / 2})`); }
+  };
   const gEdges = el('g'), gNodes = el('g'), gLabels = el('g');
   svg.append(gEdges, gNodes, gLabels);
   const seenPair = new Map();
   for (const e of edges) {
     const pa = pos.get(e.a), pb = pos.get(e.b); if (!pa || !pb) continue;
     const pairKey = [e.a, e.b].sort().join('|'); const nth = seenPair.get(pairKey) || 0; seenPair.set(pairKey, nth + 1);
-    const d = edgePath(pa, pb, e.a, e.b, nth ? (nth % 2 ? 1 : -1) * Math.ceil(nth / 2) * 22 : 0);
+    e.curve = nth ? (nth % 2 ? 1 : -1) * Math.ceil(nth / 2) * 22 : 0;
+    const d = edgePath(pa, pb, e.a, e.b, e.curve);
     const cls = e.kind === 'grouplink' ? 'link grouplink' : e.kind === 'loose' ? 'link loose' : e.kind === 'knot' ? 'link knot' : 'link';
     const path = el('path', { d, class: cls });
     if (e.kind === 'grouplink') path.style.setProperty('--w', String(1 + Math.min(6, e.n * .8)));
     const hit = el('path', { d, class: 'link hit' });
-    e.path = path; path.dataset.a = e.a; path.dataset.b = e.b;
+    e.path = path; e.hit = hit; path.dataset.a = e.a; path.dataset.b = e.b;
     const text = e.kind === 'grouplink' ? `${e.n} connection${e.n === 1 ? '' : 's'} between ${groups.find((g) => g.name === e.a).label} and ${groups.find((g) => g.name === e.b).label}` : phrase(e.link);
     hit.addEventListener('mousemove', (ev) => showTip(text, ev.clientX, ev.clientY));
     hit.addEventListener('mouseleave', hideTip);
@@ -396,7 +458,8 @@ function render() {
     gEdges.append(path, hit);
     if (e.kind === 'grouplink') {
       const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
-      gLabels.append(el('rect', { x: mx - 9, y: my - 8, width: 18, height: 16, rx: 4, class: 'edgelabel-bg' }), el('text', { x: mx, y: my + 4, 'text-anchor': 'middle', class: 'edgelabel' }, String(e.n)));
+      e.labelBg = el('rect', { x: mx - 9, y: my - 8, width: 18, height: 16, rx: 4, class: 'edgelabel-bg' }); e.labelText = el('text', { x: mx, y: my + 4, 'text-anchor': 'middle', class: 'edgelabel' }, String(e.n));
+      gLabels.append(e.labelBg, e.labelText);
     }
   }
   for (const n of nodes) {
@@ -413,16 +476,18 @@ function render() {
     if (n.flag) g.append(el('circle', { cx: w - 11, cy: hh - 11, r: 4.5, class: 'flag' }));
     n.el = g; n.pos = p;
     const go = () => { if (n.kind === 'group') { state.level = 'group'; state.group = n.id; state.selected = null; render(); renderPanel(); renderRail(); } else select(n.id); };
-    g.addEventListener('click', go);
+    draggable(g, n.id, pos, svg, { onMove: geometry, onClick: go, onDrop: () => remember(n.id, pos.get(n.id), W, H, storeKey) });
     g.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
     g.addEventListener('mousemove', (ev) => { const t = tables.get(n.id); showTip(n.kind === 'group' ? (groups.find((x) => x.name === n.id).what || n.title) : (t?.what || n.title), ev.clientX, ev.clientY); });
     g.addEventListener('mouseleave', hideTip);
     gNodes.append(g);
   }
+  geometry();
   applyHighlight();
   renderCrumbs();
   $('#btn-all').setAttribute('aria-pressed', String(state.level === 'all'));
 }
+$('#btn-tidy').addEventListener('click', () => { store.clear(store.key()); render(); });
 function applyHighlight() {
   const sel = state.selected;
   const neigh = new Set();
@@ -566,13 +631,17 @@ function renderFlowMap(f) {
   const pos = new Map();
   order.forEach((n, i) => { const c = i % cols, r = Math.floor(i / cols); const rows = Math.ceil(order.length / cols); pos.set(n, { x: (W / (cols + 1)) * (c + 1), y: (H / (rows + 1)) * (r + 1) + (c % 2 ? 14 : -14) }); });
   const gE = el('g'), gN = el('g'); s.append(gE, gN);
+  const flowKey = `wt-flow:${f.title}`;
+  applySaved(pos, W, H, flowKey);
   const cur = new Set(f.steps[stepIdx].tables);
-  for (const e of edges) { const pa = pos.get(e.a), pb = pos.get(e.b); const path = el('path', { d: edgePath(pa, pb, e.a, e.b, 0), class: 'link' + (e.link.kind === 'inferred' ? ' loose' : e.link.kind === 'junction' ? ' knot' : '') + ((cur.has(e.a) && cur.has(e.b)) ? ' lit' : '') }); gE.append(path); }
+  for (const e of edges) { const pa = pos.get(e.a), pb = pos.get(e.b); e.path = el('path', { d: edgePath(pa, pb, e.a, e.b, 0), class: 'link' + (e.link.kind === 'inferred' ? ' loose' : e.link.kind === 'junction' ? ' knot' : '') + ((cur.has(e.a) && cur.has(e.b)) ? ' lit' : '') }); gE.append(e.path); }
+  const geometry = () => { for (const e of edges) e.path.setAttribute('d', edgePath(pos.get(e.a), pos.get(e.b), e.a, e.b, 0)); for (const n of nodes) { const p = pos.get(n.id); n.el.setAttribute('transform', `translate(${p.x - n.w / 2} ${p.y - n.h / 2})`); } };
   for (const n of nodes) {
     const p = pos.get(n.id); const g = el('g', { class: 'node' + (cur.has(n.id) ? ' selected' : ' dim'), transform: `translate(${p.x - n.w / 2} ${p.y - n.h / 2})` });
     g.style.setProperty('--gc', gcolor(n.group));
     g.append(el('rect', { width: n.w, height: n.h }), el('circle', { cx: 14, cy: 20, r: 5, fill: gcolor(n.group) }), el('text', { x: 26, y: 25 }, n.title));
-    g.addEventListener('click', () => { showView('map'); select(n.id); });
+    n.el = g;
+    draggable(g, n.id, pos, s, { onMove: geometry, onClick: () => { showView('map'); select(n.id); }, onDrop: () => remember(n.id, pos.get(n.id), W, H, flowKey) });
     gN.append(g);
   }
 }
