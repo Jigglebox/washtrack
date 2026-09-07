@@ -45,6 +45,10 @@ erDiagram
 | Users can update their own message view record | UPDATE | authenticated | `auth.uid() = user_id` | `auth.uid() = user_id` |  | `20260721044724_11b216aa-73c9-4d96-aa1b-78f26aeaf059.sql` |
 | Users can view their own message view record | SELECT | authenticated | `auth.uid() = user_id` |  |  | `20260721044724_11b216aa-73c9-4d96-aa1b-78f26aeaf059.sql` |
 
+## Review notes
+
+- **low** `connectedness/loose-links`: 1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references. `user_id → users`
+
 ## Used by code
 
 **Frontend**

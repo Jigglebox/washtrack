@@ -90,6 +90,10 @@ erDiagram
 - policy "Participants can reply to tickets" on [ticket_replies](../tables/ticket_replies.md)
 - policy "Replies follow ticket visibility" on [ticket_replies](../tables/ticket_replies.md)
 
+## Review notes
+
+- **low** `connectedness/loose-links`: 2 links exist only by column name; the database does not enforce them, so deleting the target leaves dangling references. `employee_id → users; submitted_by → users`
+
 ## Used by code
 
 **Frontend**

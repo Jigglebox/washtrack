@@ -68,6 +68,10 @@ erDiagram
 | --- | --- | --- | --- |
 | `trg_payroll_periods_updated` | BEFORE UPDATE FOR EACH ROW | `set_updated_at()` |  |
 
+## Review notes
+
+- **low** `connectedness/loose-links`: 1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references. `created_by → users`
+
 ## Used by code
 
 **Frontend**

@@ -3,6 +3,7 @@
 
 import type { Policy, Relationship, SchemaGraph, Table } from './model.ts';
 import { codeFlowchart, erDiagram, triggerFlowchart } from './mermaid.ts';
+import { RULE_DOCS } from './review.ts';
 
 const fence = (code: string) => '```mermaid\n' + code + '\n```';
 const code = (s: string) => '`' + s + '`';
@@ -114,7 +115,7 @@ export function renderDocs(g: SchemaGraph, projectName: string): Map<string, str
     fence(codeFlowchart(g, 'edge-function')), '',
     '## Frontend', '',
     'Which source files query which tables. Only files with direct `supabase.from()` / `supabase.rpc()` calls are listed.', '',
-    mdTable(['File', 'Tables', 'RPCs'], g.codeRefs.filter((r) => r.kind === 'frontend').map((r) => [code(r.file), r.tables.map((x) => tableLink(x, 'root')).join(', '), r.rpcs.map(code).join(', ')])), '',
+    mdTable(['File', 'Tables (operations)', 'RPCs', 'Edge functions'], g.codeRefs.filter((r) => r.kind === 'frontend' && (r.tables.length || r.rpcs.length || r.invokes.length)).map((r) => [code(r.file), r.tables.map((x) => `${tableLink(x, 'root')}${r.ops[x]?.length ? ` (${r.ops[x].join(', ')})` : ''}`).join(', '), r.rpcs.map(code).join(', '), r.invokes.map(code).join(', ')])), '',
   ];
   files.set('functions.md', funcs.join('\n'));
 
@@ -133,8 +134,79 @@ export function renderDocs(g: SchemaGraph, projectName: string): Map<string, str
     storagePolicies.length ? mdTable(['Policy', 'On', 'Command', 'Using', 'With check'], storagePolicies.map((p) => [cell(p.name, 60), code(p.table), p.command, code(cell(p.using, 120)), p.check ? code(cell(p.check, 120)) : ''])) : '_none_', '',
   ].join('\n'));
 
+  files.set('review.md', renderReview(g, stamp));
+  files.set('changes.md', renderChanges(g, stamp));
   files.set('schema.json', JSON.stringify(g, null, 2) + '\n');
   return files;
+}
+
+const sevOrder = ['high', 'medium', 'low', 'info'] as const;
+const sevLabel: Record<string, string> = { high: 'Fix or confirm', medium: 'Check', low: 'Tidy', info: 'For the record' };
+const subjectLink = (g: SchemaGraph, f: import('./model.ts').Finding, from: 'root' | 'sub') => {
+  const t = f.table ?? (f.subjectKind === 'table' ? f.subject : undefined);
+  const known = t && g.tables.some((x) => x.name === t && !x.sources.includes('external'));
+  return known ? `${f.subject} (${tableLink(t!, from)})` : f.subject;
+};
+
+function reviewSummary(g: SchemaGraph): string {
+  const counts = sevOrder.map((s) => [s, g.findings.filter((f) => f.severity === s).length] as const);
+  const c = g.conventions;
+  return [
+    `Conventions detected: roles ${c.roles.length ? c.roles.map(code).join(', ') : '(none found)'}${c.roleEnum ? ` from ${code(c.roleEnum)}` : ''}; shared permission helpers ${c.policyHelpers.length ? c.policyHelpers.map((h) => code(h + '()')).join(', ') : '(none)'}.`, '',
+    mdTable(['Severity', 'Meaning', 'Findings'], counts.map(([s, n]) => [s, sevLabel[s], String(n)])), '',
+    `Full list with explanations: [review.md](review.md).`,
+  ].join('\n');
+}
+
+function changesSummary(g: SchemaGraph): string {
+  if (!g.changes) return 'No baseline to compare against. Commit ' + code('docs/schema/schema.json') + ' once, and every later run will show what changed. See [changes.md](changes.md).';
+  const c = g.changes;
+  if (!c.added.length && !c.removed.length && !c.changed.length) return `Nothing changed since ${c.baseline}.`;
+  return `Since ${c.baseline}: ${c.added.length} added, ${c.removed.length} removed, ${c.changed.length} changed. Details and review notes on the new pieces: [changes.md](changes.md).`;
+}
+
+function renderReview(g: SchemaGraph, stamp: string): string {
+  const out = [`# Review: is everything wired in?`, '', stamp, '', `[Back to overview](README.md)`, '',
+    'Each finding is a place where a piece of the system does not follow the conventions the rest of the system uses, or is not connected to anything. Findings are not verdicts: many will be deliberate. The point is that each one gets looked at once.', '',
+    '## Conventions this review tests against', '',
+    `- Roles: ${g.conventions.roles.map(code).join(', ') || '(none found)'}${g.conventions.roleEnum ? ` (from ${code(g.conventions.roleEnum)})` : ''}`,
+    `- Shared permission helpers used by existing access rules: ${g.conventions.policyHelpers.map((h) => code(h + '()')).join(', ') || '(none)'}`,
+    `- Role assignments live in: ${g.conventions.roleTables.map(code).join(', ') || '(not found)'}`,
+    '- "Own record" checks (`auth.uid() = some_column`) count as part of the model.', ''];
+  for (const s of sevOrder) {
+    const fs = g.findings.filter((f) => f.severity === s);
+    out.push(`## ${sevLabel[s]} (${s}): ${fs.length}`, '');
+    if (!fs.length) { out.push('_none_', ''); continue; }
+    const byRule = new Map<string, typeof fs>();
+    for (const f of fs) byRule.set(f.rule, [...(byRule.get(f.rule) ?? []), f]);
+    for (const [rule, list] of byRule) {
+      out.push(`### ${rule} (${list.length})`, '', RULE_DOCS[rule] ?? '', '');
+      out.push(mdTable(['Where', 'What', 'Evidence'], list.map((f) => [subjectLink(g, f, 'root'), cell(f.message, 220), f.evidence ? code(cell(f.evidence, 140)) : ''])), '');
+    }
+  }
+  return out.join('\n');
+}
+
+function renderChanges(g: SchemaGraph, stamp: string): string {
+  const out = [`# What changed since the last run`, '', stamp, '', `[Back to overview](README.md)`, ''];
+  if (!g.changes) {
+    out.push('No baseline available. The comparison uses the last committed ' + code('docs/schema/schema.json') + ' (or ' + code('--baseline <file>') + ' / ' + code('--baseline-ref <git ref>') + '). Commit the docs once and every later run will list what appeared, disappeared or changed.', '');
+    return out.join('\n');
+  }
+  const c = g.changes;
+  out.push(`Compared against **${c.baseline}**.`, '');
+  if (!c.added.length && !c.removed.length && !c.changed.length) { out.push('_Nothing changed._', ''); return out.join('\n'); }
+  const subjects = new Set<string>();
+  for (const a of c.added) { subjects.add(a.name); if (a.table) subjects.add(a.table); }
+  const onNew = g.findings.filter((f) => f.severity !== 'info' && (subjects.has(f.subject) || (f.table && subjects.has(f.table)) || [...subjects].some((s) => f.subject.startsWith(s + ':') || f.subject === s)));
+  out.push('## Review notes on the new pieces', '');
+  out.push(onNew.length ? mdTable(['Severity', 'Rule', 'Where', 'What'], onNew.map((f) => [f.severity, code(f.rule), subjectLink(g, f, 'root'), cell(f.message, 200)])) : '_No findings touch the new or changed pieces._', '');
+  const section = (title: string, xs: { kind: string; name: string; table?: string; detail?: string }[]) => {
+    out.push(`## ${title} (${xs.length})`, '');
+    out.push(xs.length ? mdTable(['Kind', 'Name', 'On', 'Detail'], xs.map((x) => [x.kind, code(x.name), x.table ? tableLink(x.table, 'root') : '', cell(x.detail, 160)])) : '_none_', '');
+  };
+  section('Added', c.added); section('Removed', c.removed); section('Changed', c.changed);
+  return out.join('\n');
 }
 
 function renderTablePage(g: SchemaGraph, t: Table, clusterOf: Map<string, string>, stamp: string): string {
@@ -196,6 +268,9 @@ function renderTablePage(g: SchemaGraph, t: Table, clusterOf: Map<string, string
     if (polRefs.length) out.push(polRefs.map((p) => `- policy "${p.name}" on ${tableLink(p.table, 'sub')}`).join('\n'));
     out.push('');
   }
+
+  const notes = g.findings.filter((f) => (f.table === t.name || (f.subjectKind === 'table' && f.subject === t.name)) && f.severity !== 'info');
+  if (notes.length) out.push('## Review notes', '', notes.map((f) => `- **${f.severity}** ${code(f.rule)}: ${f.message}${f.evidence ? ` ${code(cell(f.evidence, 120))}` : ''}`).join('\n'), '');
 
   const edge = g.codeRefs.filter((r) => r.kind === 'edge-function' && r.tables.includes(t.name));
   const fe = g.codeRefs.filter((r) => r.kind === 'frontend' && r.tables.includes(t.name));

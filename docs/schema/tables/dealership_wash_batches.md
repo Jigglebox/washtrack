@@ -73,6 +73,10 @@ erDiagram
 - function `get_dealership_report_data()` (security definer)
 - function `get_portal_dealership_history()` (security definer)
 
+## Review notes
+
+- **low** `connectedness/loose-links`: 1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references. `employee_id → users`
+
 ## Used by code
 
 _No direct queries found in code._

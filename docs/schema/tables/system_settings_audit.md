@@ -54,6 +54,10 @@ erDiagram
 - function `auto_update_cutoff_date()` (security definer)
 - function `log_system_setting_change()` (security definer)
 
+## Review notes
+
+- **high** `permissions/write-without-rule`: Code updates into `system_settings_audit` but no access rule on `system_settings_audit` allows UPDATE for app users. Either this write always fails, or it only works through a privileged path. `src/lib/cutoff.ts → system_settings_audit.update()`
+
 ## Used by code
 
 **Frontend**

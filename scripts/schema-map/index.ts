@@ -9,6 +9,8 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { buildGraph } from './analyze.ts';
+import { diffGraphs, loadBaseline } from './changes.ts';
+import { detectConventions, reviewGraph } from './review.ts';
 import { diffLive, fetchLive } from './live-db.ts';
 import type { LiveInfo } from './model.ts';
 import { scanCode } from './parse-code.ts';
@@ -48,6 +50,9 @@ Options:
   --db <url>           read the live database (or set SUPABASE_DB_URL / DATABASE_URL); read-only
   --no-db              ignore SUPABASE_DB_URL / DATABASE_URL
   --descriptions <f>   plain-English descriptions for the explorer (default: docs/schema-descriptions.json)
+  --baseline <file>    compare against this schema.json instead of the last committed one
+  --baseline-ref <ref> git ref to take the committed schema.json from (default HEAD)
+  --no-baseline        skip the "what changed" comparison
   --check              do not write; exit 1 if the output dir is out of date
   --quiet              no summary`);
   process.exit(0);
@@ -67,7 +72,7 @@ let projectName = String(args.name ?? basename(root));
 
 const staticTypes = existsSync(typesPath) ? parseTypesFile(typesPath) : null;
 const staticMig = replayMigrations(migDir);
-const codeRefs = scanCode(root, fnDir, srcDir);
+const roleVocab = new Set((staticTypes?.enums ?? []).filter((e) => /role/i.test(e.name)).flatMap((e) => e.values));
 
 let live: LiveInfo = { connected: false };
 let types = staticTypes;
@@ -77,6 +82,7 @@ let extraWarnings: string[] = [];
 if (dbUrl) {
   try {
     liveSnapshot = await fetchLive(dbUrl);
+    for (const e of liveSnapshot.types.enums) if (/role/i.test(e.name)) for (const v of e.values) roleVocab.add(v);
     live = { connected: true, host: liveSnapshot.host, database: liveSnapshot.database, serverVersion: liveSnapshot.serverVersion };
     types = liveSnapshot.types;
     mig = liveSnapshot.mig;
@@ -89,12 +95,19 @@ if (dbUrl) {
     if (!types) { console.error('schema-map: no types.ts either; nothing to map'); process.exit(3); }
   }
 }
+const codeRefs = scanCode(root, fnDir, srcDir, roleVocab);
 const graph = buildGraph(types!, mig, codeRefs, { hubRatio: Number(args['hub-ratio'] ?? 0.25), minHubDegree: Number(args['min-hub-degree'] ?? 4) }, { staticMig, live, liveSnapshot, extraWarnings });
 const descPath = resolve(root, String(args.descriptions ?? 'docs/schema-descriptions.json'));
 let descriptions = {};
 if (existsSync(descPath)) { try { descriptions = JSON.parse(readFileSync(descPath, 'utf8')); } catch (e) { console.error(`schema-map: could not read ${descPath}: ${(e as Error).message}`); } }
 const templatePath = new URL('./explorer.html', import.meta.url).pathname;
 const build = (gr: typeof graph) => { const f = renderDocs(gr, projectName); f.set('explorer.html', renderExplorer(gr, descriptions, projectName, templatePath)); return f; };
+graph.conventions = detectConventions(graph);
+graph.findings = reviewGraph(graph, graph.conventions);
+{
+  const baseline = args['no-baseline'] ? null : loadBaseline(root, join(outDir, 'schema.json'), { file: typeof args.baseline === 'string' ? args.baseline : undefined, ref: typeof args['baseline-ref'] === 'string' ? args['baseline-ref'] : undefined });
+  if (baseline) graph.changes = diffGraphs(baseline.graph, graph, baseline.label);
+}
 const files = build(graph);
 
 // Keep output byte-stable across runs on the same inputs: the timestamp only changes when content changes.
@@ -103,7 +116,7 @@ const files = build(graph);
   if (existsSync(prev)) {
     try {
       const old = JSON.parse(readFileSync(prev, 'utf8'));
-      const sameExceptTime = JSON.stringify({ ...old, generatedAt: '' }) === JSON.stringify({ ...graph, generatedAt: '' });
+      const sameExceptTime = JSON.stringify({ ...old, generatedAt: '', changes: undefined }) === JSON.stringify({ ...graph, generatedAt: '', changes: undefined });
       if (sameExceptTime && old.generatedAt) {
         graph.generatedAt = old.generatedAt;
         const again = build(graph);
@@ -144,6 +157,8 @@ for (const [rel, content] of files) {
 
 if (!args.quiet) {
   const t = graph.tables.filter((x) => x.kind === 'table' && !x.sources.includes('external')).length;
-  console.log(`schema-map: ${t} tables, ${graph.relationships.filter((r) => r.kind === 'declared').length} FKs, ${graph.relationships.filter((r) => r.kind === 'inferred').length} inferred, ${graph.policies.length} policies, ${graph.triggers.length} triggers, ${graph.functions.length} functions, ${graph.clusters.length} domains, ${graph.warnings.length} warnings`);
+  const sev = (x: string) => graph.findings.filter((f) => f.severity === x).length;
+  console.log(`schema-map: ${t} tables, ${graph.relationships.filter((r) => r.kind === 'declared').length} FKs, ${graph.relationships.filter((r) => r.kind === 'inferred').length} inferred, ${graph.policies.length} policies, ${graph.triggers.length} triggers, ${graph.functions.length} functions, ${graph.clusters.length} domains`);
+  console.log(`schema-map: review: ${sev('high')} high, ${sev('medium')} medium, ${sev('low')} low, ${sev('info')} info` + (graph.changes ? ` | changes vs ${graph.changes.baseline}: +${graph.changes.added.length} -${graph.changes.removed.length} ~${graph.changes.changed.length}` : ' | no baseline for changes'));
   console.log(`schema-map: wrote ${files.size} files to ${outDir}`);
 }

@@ -76,6 +76,7 @@ export function renderExplorer(g: SchemaGraph, d: Descriptions, projectName: str
       rows: t.rowCount ?? null,
       policies: g.policies.filter((p) => p.table === t.name).length,
       pages, edge, triggers, isHub: t.isHub, isJunction: t.isJunction,
+      notes: g.findings.filter((f) => f.severity !== 'info' && (f.table === t.name || (f.subjectKind === 'table' && f.subject === t.name))).map((f) => ({ sev: f.severity, rule: f.rule, msg: f.message, ev: f.evidence ?? '' })),
     };
   });
   for (const t of tables) { const gr = groups.find((x) => x.name === t.group); if (gr && !gr.tables.includes(t.name)) gr.tables.push(t.name); }
@@ -88,8 +89,14 @@ export function renderExplorer(g: SchemaGraph, d: Descriptions, projectName: str
   const knownTables = new Set(tables.map((t) => t.name));
   const flows = (d.flows ?? []).map((f) => ({ title: f.title, steps: f.steps.map((s) => ({ text: s.text, tables: s.tables.filter((t) => knownTables.has(t)) })) }));
 
+  const review = {
+    counts: { high: g.findings.filter((f) => f.severity === 'high').length, medium: g.findings.filter((f) => f.severity === 'medium').length, low: g.findings.filter((f) => f.severity === 'low').length },
+    top: g.findings.filter((f) => f.severity === 'high' || f.severity === 'medium').map((f) => ({ sev: f.severity, rule: f.rule, subject: f.subject, table: f.table && knownTables.has(f.table) ? f.table : (f.subjectKind === 'table' && knownTables.has(f.subject) ? f.subject : null), msg: f.message })),
+    changes: g.changes ? { baseline: g.changes.baseline, added: g.changes.added.length, removed: g.changes.removed.length, changed: g.changes.changed.length } : null,
+  };
   const data = {
     title: `${projectName} data map`,
+    review,
     intro: d.intro ?? 'Click a group, then a table. Hover a line to read the connection in plain words.',
     live: g.live.connected ? `${g.live.host}, ${g.live.database}` : null,
     generatedAt: g.generatedAt.slice(0, 10),

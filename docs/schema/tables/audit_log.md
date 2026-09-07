@@ -60,6 +60,10 @@ erDiagram
 - function `audit_wash_entries()` (security definer)
 - function `audit_work_entries()` (security definer)
 
+## Review notes
+
+- **high** `permissions/adhoc-role-check`: This rule checks roles by hand instead of using the shared helpers (has_role_or_higher(), has_role(), is_super_admin()). If the role model changes, this one will be missed. `EXISTS ( SELECT 1 FROM user_roles WHERE user_roles.user_id = auth.uid() AND user_roles.role IN ('manager', 'admin', 'su…`
+
 ## Used by code
 
 _No direct queries found in code._

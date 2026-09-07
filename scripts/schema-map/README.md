@@ -43,6 +43,35 @@ same database, disagreements between them are reported under "Warnings and
 drift" in the README. Those usually mean something was changed in the Supabase
 dashboard without a migration.
 
+## Review: is everything wired in?
+
+`docs/schema/review.md` lists places where a piece of the system does not
+follow the conventions the rest of the system uses, or is not connected to
+anything. The conventions are discovered from the project itself, not assumed:
+
+- the role vocabulary (the `app_role` enum and where it is used),
+- the shared permission helpers most access rules call (`has_role_or_higher()` etc.),
+- the "own record" pattern (`auth.uid() = column`).
+
+Rules cover three questions. **Permissions**: does a new access rule, page
+route, edge function or database function use the existing role system, or
+did it grow its own? **Connectedness**: is there a table, function or edge
+function nothing uses, or a link that exists only by naming? **Consistency**:
+does a table lack the access rules or automatic actions its siblings have?
+
+Findings carry a severity (`high` fix or confirm, `medium` check, `low` tidy,
+`info` for the record) and are also shown on each table's page under "Review
+notes". They are prompts, not verdicts.
+
+## What changed since the last run
+
+`docs/schema/changes.md` compares the current graph with the last committed
+`docs/schema/schema.json` (or `--baseline <file>` / `--baseline-ref <git ref>`)
+and lists added, removed and changed tables, columns, links, access rules,
+automatic actions, functions, routes and code files. Review findings that touch
+the new pieces are listed first, so after Lovable makes a change the workflow
+is: pull, run `npm run schema:map`, open `changes.md`.
+
 ## Output
 
 - `explorer.html`: an interactive, plain-English map for non-developers. Groups,
@@ -50,7 +79,9 @@ dashboard without a migration.
   glossary. Descriptions come from `docs/schema-descriptions.json`, which is
   hand-written and safe to edit; the structure comes from the crawl. Open the
   file in a browser.
-- `README.md`: stats, domain list, full relationship map, hub tables, warnings.
+- `README.md`: stats, domain list, full relationship map, hub tables, review summary, warnings.
+- `explorer.html`: interactive, plain-English map. Click a group, then a table; hover a line.
+- `review.md` and `changes.md`: see above.
 - `clusters/<domain>.md`: one diagram per domain with key columns.
 - `tables/<table>.md`: columns, relationships in both directions, neighbourhood
   diagram, RLS policies, triggers, SQL functions and code that use the table.

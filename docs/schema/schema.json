@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-07T20:36:37.452Z",
+  "generatedAt": "2026-09-07T20:40:20.277Z",
   "live": {
     "connected": false
   },
@@ -7923,7 +7923,11 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "finance",
+        "super_admin"
+      ],
       "routes": [],
       "edge": {
         "usesServiceRole": true,
@@ -7979,7 +7983,13 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "employee",
+        "finance",
+        "manager",
+        "super_admin"
+      ],
       "routes": [],
       "edge": {
         "usesServiceRole": true,
@@ -8142,7 +8152,10 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "super_admin"
+      ],
       "routes": [],
       "edge": {
         "usesServiceRole": true,
@@ -8168,7 +8181,11 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "finance",
+        "super_admin"
+      ],
       "routes": [],
       "edge": {
         "usesServiceRole": true,
@@ -8190,7 +8207,11 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "finance",
+        "super_admin"
+      ],
       "routes": [],
       "edge": {
         "usesServiceRole": true,
@@ -8282,7 +8303,13 @@
       "ops": {},
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "employee",
+        "finance",
+        "manager",
+        "super_admin"
+      ],
       "routes": [
         {
           "path": "/login",
@@ -8717,7 +8744,10 @@
         "create-user",
         "send-welcome-email"
       ],
-      "roles": [],
+      "roles": [
+        "admin",
+        "manager"
+      ],
       "routes": []
     },
     {
@@ -8797,7 +8827,10 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "manager"
+      ],
       "routes": []
     },
     {
@@ -8840,22 +8873,6 @@
       "routes": []
     },
     {
-      "file": "src/components/Layout.tsx",
-      "kind": "frontend",
-      "label": "src/components/Layout.tsx",
-      "tables": [],
-      "ops": {},
-      "rpcs": [],
-      "invokes": [],
-      "roles": [
-        "admin",
-        "employee",
-        "finance",
-        "manager"
-      ],
-      "routes": []
-    },
-    {
       "file": "src/components/LocationTable.tsx",
       "kind": "frontend",
       "label": "src/components/LocationTable.tsx",
@@ -8891,19 +8908,6 @@
       "rpcs": [],
       "invokes": [],
       "roles": [],
-      "routes": []
-    },
-    {
-      "file": "src/components/ModeSwitcher.tsx",
-      "kind": "frontend",
-      "label": "src/components/ModeSwitcher.tsx",
-      "tables": [],
-      "ops": {},
-      "rpcs": [],
-      "invokes": [],
-      "roles": [
-        "finance"
-      ],
       "routes": []
     },
     {
@@ -9146,7 +9150,11 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "finance",
+        "super_admin"
+      ],
       "routes": []
     },
     {
@@ -9167,7 +9175,11 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "finance",
+        "super_admin"
+      ],
       "routes": []
     },
     {
@@ -9215,7 +9227,11 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "finance",
+        "super_admin"
+      ],
       "routes": []
     },
     {
@@ -9296,7 +9312,13 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "employee",
+        "finance",
+        "manager",
+        "super_admin"
+      ],
       "routes": []
     },
     {
@@ -9431,7 +9453,12 @@
       },
       "rpcs": [],
       "invokes": [],
-      "roles": [],
+      "roles": [
+        "admin",
+        "employee",
+        "finance",
+        "manager"
+      ],
       "routes": []
     },
     {
@@ -10172,5 +10199,402 @@
     "FK `employee_comments_location_id_fkey` (employee_comments.location_id -> locations) is in migrations but not in types.ts. It may have been dropped, or types.ts is stale.",
     "Function `get_super_admin_id` is exposed in types.ts but no migration defines it (created via the dashboard).",
     "Function `get_users_for_managers` is exposed in types.ts but no migration defines it (created via the dashboard)."
-  ]
+  ],
+  "conventions": {
+    "roles": [
+      "employee",
+      "manager",
+      "finance",
+      "admin",
+      "super_admin"
+    ],
+    "roleEnum": "app_role",
+    "policyHelpers": [
+      "has_role_or_higher",
+      "has_role",
+      "is_super_admin",
+      "get_portal_user_id",
+      "portal_has_location"
+    ],
+    "roleTables": [
+      "user_roles"
+    ]
+  },
+  "findings": [
+    {
+      "rule": "permissions/adhoc-role-check",
+      "severity": "high",
+      "subjectKind": "policy",
+      "subject": "audit_log: Managers and admins can view audit logs",
+      "table": "audit_log",
+      "message": "This rule checks roles by hand instead of using the shared helpers (has_role_or_higher(), has_role(), is_super_admin()). If the role model changes, this one will be missed.",
+      "evidence": "EXISTS ( SELECT 1 FROM user_roles WHERE user_roles.user_id = auth.uid() AND user_roles.role IN ('manager', 'admin', 'super_admin', 'finance') )"
+    },
+    {
+      "rule": "permissions/unguarded-edge-function",
+      "severity": "high",
+      "subjectKind": "edge-function",
+      "subject": "create-portal-user",
+      "message": "Runs with the service-role key (bypasses every access rule) and never checks who is calling. Anyone with the project URL can call it.",
+      "evidence": "supabase/functions/create-portal-user/index.ts"
+    },
+    {
+      "rule": "permissions/unguarded-edge-function",
+      "severity": "high",
+      "subjectKind": "edge-function",
+      "subject": "update-cutoff-date",
+      "message": "Runs with the service-role key (bypasses every access rule) and never checks who is calling. Anyone with the project URL can call it.",
+      "evidence": "supabase/functions/update-cutoff-date/index.ts"
+    },
+    {
+      "rule": "permissions/write-without-rule",
+      "severity": "high",
+      "subjectKind": "file",
+      "subject": "src/lib/cutoff.ts",
+      "table": "system_settings_audit",
+      "message": "Code updates into `system_settings_audit` but no access rule on `system_settings_audit` allows UPDATE for app users. Either this write always fails, or it only works through a privileged path.",
+      "evidence": "src/lib/cutoff.ts → system_settings_audit.update()"
+    },
+    {
+      "rule": "connectedness/unused-table",
+      "severity": "medium",
+      "subjectKind": "table",
+      "subject": "manager_approval_requests",
+      "table": "manager_approval_requests",
+      "message": "No page, edge function, database function, rule or automatic action reads or writes this table. It may be dead, or something was built but never wired up."
+    },
+    {
+      "rule": "permissions/edge-function-no-role-check",
+      "severity": "medium",
+      "subjectKind": "edge-function",
+      "subject": "ensure-portal-user",
+      "message": "Runs with the service-role key and checks that the caller is logged in, but not what role they have. Fine only if every logged-in user may do this.",
+      "evidence": "supabase/functions/ensure-portal-user/index.ts"
+    },
+    {
+      "rule": "permissions/edge-function-no-role-check",
+      "severity": "medium",
+      "subjectKind": "edge-function",
+      "subject": "record-portal-login",
+      "message": "Runs with the service-role key and checks that the caller is logged in, but not what role they have. Fine only if every logged-in user may do this.",
+      "evidence": "supabase/functions/record-portal-login/index.ts"
+    },
+    {
+      "rule": "permissions/edge-function-no-role-check",
+      "severity": "medium",
+      "subjectKind": "edge-function",
+      "subject": "submit-portal-onboarding",
+      "message": "Runs with the service-role key and checks that the caller is logged in, but not what role they have. Fine only if every logged-in user may do this.",
+      "evidence": "supabase/functions/submit-portal-onboarding/index.ts"
+    },
+    {
+      "rule": "connectedness/lookalike-tables",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "error_report_replies ~ ticket_replies",
+      "table": "error_report_replies",
+      "message": "These two tables share 67% of their columns. Check whether one duplicates the other's purpose.",
+      "evidence": "body, created_at, id, user_id"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "activity_logs",
+      "table": "activity_logs",
+      "message": "1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "user_id → users"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "dealership_location_requests",
+      "table": "dealership_location_requests",
+      "message": "2 links exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "requested_by → users; reviewed_by → users"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "dealership_rates",
+      "table": "dealership_rates",
+      "message": "1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "created_by → users"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "dealership_wash_batches",
+      "table": "dealership_wash_batches",
+      "message": "1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "employee_id → users"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "employee_comments",
+      "table": "employee_comments",
+      "message": "2 links exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "location_id → locations; employee_id → users"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "error_report_replies",
+      "table": "error_report_replies",
+      "message": "1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "user_id → users"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "payroll_periods",
+      "table": "payroll_periods",
+      "message": "1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "created_by → users"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "ticket_replies",
+      "table": "ticket_replies",
+      "message": "1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "user_id → users"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "ticket_views",
+      "table": "ticket_views",
+      "message": "1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "user_id → users"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "tickets",
+      "table": "tickets",
+      "message": "2 links exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "employee_id → users; submitted_by → users"
+    },
+    {
+      "rule": "connectedness/loose-links",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "user_message_views",
+      "table": "user_message_views",
+      "message": "1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references.",
+      "evidence": "user_id → users"
+    },
+    {
+      "rule": "connectedness/uninvoked-edge-function",
+      "severity": "low",
+      "subjectKind": "edge-function",
+      "subject": "_shared",
+      "message": "No page calls this edge function. It may be triggered by a schedule or webhook; if not, it is disconnected.",
+      "evidence": "supabase/functions/_shared/welcome-email.ts"
+    },
+    {
+      "rule": "connectedness/uninvoked-edge-function",
+      "severity": "low",
+      "subjectKind": "edge-function",
+      "subject": "send-error-report-email",
+      "message": "No page calls this edge function. It may be triggered by a schedule or webhook; if not, it is disconnected.",
+      "evidence": "supabase/functions/send-error-report-email/index.ts"
+    },
+    {
+      "rule": "connectedness/uninvoked-edge-function",
+      "severity": "low",
+      "subjectKind": "edge-function",
+      "subject": "update-cutoff-date",
+      "message": "No page calls this edge function. It may be triggered by a schedule or webhook; if not, it is disconnected.",
+      "evidence": "supabase/functions/update-cutoff-date/index.ts"
+    },
+    {
+      "rule": "connectedness/unreferenced-function",
+      "severity": "low",
+      "subjectKind": "function",
+      "subject": "audit_wash_entries",
+      "message": "Not called from any page, edge function, rule, trigger or other function. Possibly left over from an earlier version.",
+      "evidence": "20251031033503_58d57205-49cf-441e-bd45-c1d307483c5d.sql"
+    },
+    {
+      "rule": "connectedness/unreferenced-function",
+      "severity": "low",
+      "subjectKind": "function",
+      "subject": "audit_work_entries",
+      "message": "Not called from any page, edge function, rule, trigger or other function. Possibly left over from an earlier version.",
+      "evidence": "20251220205355_2c0edbc1-49ba-4bfc-863d-6d6f4d45cb7a.sql"
+    },
+    {
+      "rule": "connectedness/unreferenced-function",
+      "severity": "low",
+      "subjectKind": "function",
+      "subject": "get_applicable_rate",
+      "message": "Not called from any page, edge function, rule, trigger or other function. Possibly left over from an earlier version.",
+      "evidence": "20251220205355_2c0edbc1-49ba-4bfc-863d-6d6f4d45cb7a.sql"
+    },
+    {
+      "rule": "connectedness/unreferenced-function",
+      "severity": "low",
+      "subjectKind": "function",
+      "subject": "get_super_admin_id",
+      "message": "Not called from any page, edge function, rule, trigger or other function. Possibly left over from an earlier version."
+    },
+    {
+      "rule": "connectedness/unreferenced-function",
+      "severity": "low",
+      "subjectKind": "function",
+      "subject": "get_users_for_managers",
+      "message": "Not called from any page, edge function, rule, trigger or other function. Possibly left over from an earlier version."
+    },
+    {
+      "rule": "connectedness/unreferenced-function",
+      "severity": "low",
+      "subjectKind": "function",
+      "subject": "is_portal_user",
+      "message": "Not called from any page, edge function, rule, trigger or other function. Possibly left over from an earlier version.",
+      "evidence": "20260624221350_0abfecd5-51ce-493c-9711-b5544a85d673.sql"
+    },
+    {
+      "rule": "consistency/updated-at-not-maintained",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "report_templates",
+      "table": "report_templates",
+      "message": "Has an updated_at column but no automatic action keeps it current, unlike 12 other tables."
+    },
+    {
+      "rule": "consistency/updated-at-not-maintained",
+      "severity": "low",
+      "subjectKind": "table",
+      "subject": "system_settings",
+      "table": "system_settings",
+      "message": "Has an updated_at column but no automatic action keeps it current, unlike 12 other tables."
+    },
+    {
+      "rule": "connectedness/unreferenced-function",
+      "severity": "info",
+      "subjectKind": "function",
+      "subject": "disable_inactive_portal_users",
+      "message": "Not called from code, rules, triggers or other functions. Looks like a scheduled or maintenance job; confirm something schedules it.",
+      "evidence": "20260624214004_8a349c83-7751-43a6-8c27-1ece902bed41.sql"
+    },
+    {
+      "rule": "connectedness/unreferenced-function",
+      "severity": "info",
+      "subjectKind": "function",
+      "subject": "get_last_monday",
+      "message": "Not called from code, rules, triggers or other functions. Looks like a scheduled or maintenance job; confirm something schedules it.",
+      "evidence": "20251230164748_968a63f0-76e6-456f-923b-1b5936aa8f10.sql"
+    },
+    {
+      "rule": "connectedness/unreferenced-function",
+      "severity": "info",
+      "subjectKind": "function",
+      "subject": "purge_old_activity_logs",
+      "message": "Not called from code, rules, triggers or other functions. Looks like a scheduled or maintenance job; confirm something schedules it.",
+      "evidence": "20260310213103_7482e75b-65b1-4c70-9359-5a70f21c133f.sql"
+    },
+    {
+      "rule": "consistency/drift",
+      "severity": "info",
+      "subjectKind": "schema",
+      "subject": "repo vs database",
+      "message": "View `users_safe_view` is in types.ts but no migration defines it (defined via the dashboard)."
+    },
+    {
+      "rule": "consistency/drift",
+      "severity": "info",
+      "subjectKind": "schema",
+      "subject": "repo vs database",
+      "message": "FK `employee_comments_location_id_fkey` (employee_comments.location_id -> locations) is in migrations but not in types.ts. It may have been dropped, or types.ts is stale."
+    },
+    {
+      "rule": "consistency/drift",
+      "severity": "info",
+      "subjectKind": "schema",
+      "subject": "repo vs database",
+      "message": "Function `get_super_admin_id` is exposed in types.ts but no migration defines it (created via the dashboard)."
+    },
+    {
+      "rule": "consistency/drift",
+      "severity": "info",
+      "subjectKind": "schema",
+      "subject": "repo vs database",
+      "message": "Function `get_users_for_managers` is exposed in types.ts but no migration defines it (created via the dashboard)."
+    },
+    {
+      "rule": "permissions/open-policy",
+      "severity": "info",
+      "subjectKind": "policy",
+      "subject": "audit_log: System can insert audit logs",
+      "table": "audit_log",
+      "message": "Unconditional INSERT access for authenticated. Fine if intended; listed so it is a decision, not an accident."
+    },
+    {
+      "rule": "permissions/open-policy",
+      "severity": "info",
+      "subjectKind": "policy",
+      "subject": "dealership_rates: Authenticated can view dealership rates",
+      "table": "dealership_rates",
+      "message": "Unconditional SELECT access for authenticated. Fine if intended; listed so it is a decision, not an accident."
+    },
+    {
+      "rule": "permissions/open-policy",
+      "severity": "info",
+      "subjectKind": "policy",
+      "subject": "system_settings_audit: All authenticated users can read audit trail",
+      "table": "system_settings_audit",
+      "message": "Unconditional SELECT access for public. Fine if intended; listed so it is a decision, not an accident."
+    },
+    {
+      "rule": "permissions/open-policy",
+      "severity": "info",
+      "subjectKind": "policy",
+      "subject": "system_settings_audit: System can insert audit records",
+      "table": "system_settings_audit",
+      "message": "Unconditional INSERT access for public. Fine if intended; listed so it is a decision, not an accident."
+    },
+    {
+      "rule": "permissions/open-policy",
+      "severity": "info",
+      "subjectKind": "policy",
+      "subject": "system_settings: All authenticated users can read system settings",
+      "table": "system_settings",
+      "message": "Unconditional SELECT access for public. Fine if intended; listed so it is a decision, not an accident."
+    },
+    {
+      "rule": "permissions/open-policy",
+      "severity": "info",
+      "subjectKind": "policy",
+      "subject": "work_types: Everyone can read work_types",
+      "table": "work_types",
+      "message": "Unconditional SELECT access for public. Fine if intended; listed so it is a decision, not an accident."
+    }
+  ],
+  "changes": {
+    "baseline": "git HEAD (662d135)",
+    "added": [],
+    "removed": [
+      {
+        "kind": "code file",
+        "name": "src/components/Layout.tsx"
+      },
+      {
+        "kind": "code file",
+        "name": "src/components/ModeSwitcher.tsx"
+      }
+    ],
+    "changed": []
+  }
 }

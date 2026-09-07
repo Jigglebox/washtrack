@@ -77,7 +77,8 @@ export function scanCode(root: string, functionsDir: string, srcDir: string, rol
       const rel = relative(root, f).split(sep).join('/');
       const isRouteFile = kind === 'frontend' && /<Route\s/.test(text);
       const routes = isRouteFile ? parseRoutes(text, roleVocab) : [];
-      if (!tables.size && !rpcs.size && !invokes.size && !roles.size && !routes.length && kind === 'frontend') continue;
+      const onlyKnownRoles = [...roles].every((r) => roleVocab.has(r));
+      if (kind === 'frontend' && !tables.size && !rpcs.size && !invokes.size && !routes.length && (!roles.size || onlyKnownRoles)) continue;
       const label = kind === 'edge-function' ? relative(dir, f).split(sep)[0] : rel;
       const ref: CodeRef = {
         file: rel, kind, label,

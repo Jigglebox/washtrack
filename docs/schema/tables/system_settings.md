@@ -65,6 +65,10 @@ erDiagram
 
 - function `auto_update_cutoff_date()` (security definer)
 
+## Review notes
+
+- **low** `consistency/updated-at-not-maintained`: Has an updated_at column but no automatic action keeps it current, unlike 12 other tables.
+
 ## Used by code
 
 **Edge functions**

@@ -185,70 +185,67 @@ flowchart LR
 
 Which source files query which tables. Only files with direct `supabase.from()` / `supabase.rpc()` calls are listed.
 
-| File | Tables | RPCs |
-| --- | --- | --- |
-| `src/App.tsx` |  |  |
-| `src/components/AddVehicleModal.tsx` | [rate_configs](tables/rate_configs.md), [work_items](tables/work_items.md) |  |
-| `src/components/CSVImportModal.tsx` | [clients](tables/clients.md), [locations](tables/locations.md), [rate_configs](tables/rate_configs.md), [work_items](tables/work_items.md), [work_types](tables/work_types.md) |  |
-| `src/components/ClientSetupWizard.tsx` | [clients](tables/clients.md), [locations](tables/locations.md) |  |
-| `src/components/CreateClientInlineModal.tsx` | [clients](tables/clients.md) |  |
-| `src/components/CreateLocationInlineModal.tsx` | [locations](tables/locations.md) |  |
-| `src/components/CreateLocationModal.tsx` | [clients](tables/clients.md), [locations](tables/locations.md) |  |
-| `src/components/CreateUserModal.tsx` | [locations](tables/locations.md), [user_locations](tables/user_locations.md), [users](tables/users.md) |  |
-| `src/components/EditLocationModal.tsx` | [clients](tables/clients.md), [locations](tables/locations.md) |  |
-| `src/components/EditServiceModal.tsx` | [rate_configs](tables/rate_configs.md), [work_items](tables/work_items.md), [work_types](tables/work_types.md) |  |
-| `src/components/EditUserModal.tsx` | [locations](tables/locations.md), [user_locations](tables/user_locations.md), [user_roles](tables/user_roles.md), [users](tables/users.md) |  |
-| `src/components/EmployeeCommentSection.tsx` | [employee_comments](tables/employee_comments.md), [message_replies](tables/message_replies.md) |  |
-| `src/components/ErrorReportButton.tsx` | [error_reports](tables/error_reports.md) |  |
-| `src/components/Layout.tsx` |  |  |
-| `src/components/LocationTable.tsx` | [clients](tables/clients.md), [users](tables/users.md) |  |
-| `src/components/LogWorkModal.tsx` | [work_logs](tables/work_logs.md) |  |
-| `src/components/ModeSwitcher.tsx` |  |  |
-| `src/components/MyErrorReports.tsx` | [error_report_replies](tables/error_report_replies.md), [error_reports](tables/error_reports.md) | `get_user_display_info` |
-| `src/components/UserSearchInput.tsx` | [users_safe_view](tables/users_safe_view.md) |  |
-| `src/components/UserTable.tsx` |  |  |
-| `src/components/WorkItemGrid.tsx` | [work_items](tables/work_items.md) |  |
-| `src/components/dealership/DealershipWashCard.tsx` | [locations](tables/locations.md) |  |
-| `src/components/dealership/RequestDealershipLocationModal.tsx` | [clients](tables/clients.md), [locations](tables/locations.md) |  |
-| `src/components/reports/ReportFilters.tsx` | [clients](tables/clients.md), [locations](tables/locations.md), [work_types](tables/work_types.md) |  |
-| `src/components/reports/TemplateManager.tsx` | [report_templates](tables/report_templates.md) |  |
-| `src/components/tickets/SubmitTicketModal.tsx` | [clients](tables/clients.md), [locations](tables/locations.md), [ticket_line_items](tables/ticket_line_items.md), [tickets](tables/tickets.md) |  |
-| `src/components/tickets/TicketList.tsx` | [ticket_line_items](tables/ticket_line_items.md), [ticket_replies](tables/ticket_replies.md), [tickets](tables/tickets.md) | `get_user_display_info` |
-| `src/contexts/AuthContext.tsx` | [client_portal_users](tables/client_portal_users.md), [locations](tables/locations.md), [user_locations](tables/user_locations.md), [users](tables/users.md) |  |
-| `src/hooks/usePendingPortalRequestCount.ts` | [client_portal_access_requests](tables/client_portal_access_requests.md), [client_portal_users](tables/client_portal_users.md) |  |
-| `src/hooks/usePortalUnreadCount.ts` | [error_report_replies](tables/error_report_replies.md), [message_replies](tables/message_replies.md), [user_message_views](tables/user_message_views.md) |  |
-| `src/hooks/useUnreadMessageCount.ts` | [employee_comments](tables/employee_comments.md), [user_message_views](tables/user_message_views.md) |  |
-| `src/hooks/useUnreadTicketCount.ts` | [ticket_views](tables/ticket_views.md), [tickets](tables/tickets.md) |  |
-| `src/lib/cutoff.ts` | [system_settings](tables/system_settings.md), [system_settings_audit](tables/system_settings_audit.md) |  |
-| `src/lib/dealershipRates.ts` | [system_settings](tables/system_settings.md) |  |
-| `src/lib/roleUtils.ts` | [user_roles](tables/user_roles.md) |  |
-| `src/pages/ActivityLogs.tsx` |  | `get_user_display_info` |
-| `src/pages/AdminDashboard.tsx` | [clients](tables/clients.md), [error_report_replies](tables/error_report_replies.md), [error_reports](tables/error_reports.md), [locations](tables/locations.md), [users](tables/users.md) | `get_user_display_info` |
-| `src/pages/AdminSettings.tsx` | [system_settings_audit](tables/system_settings_audit.md), [users](tables/users.md) |  |
-| `src/pages/ChangePassword.tsx` | [users](tables/users.md) | `get_portal_account_status` |
-| `src/pages/Clients.tsx` | [clients](tables/clients.md) |  |
-| `src/pages/CreateUser.tsx` | [locations](tables/locations.md), [users](tables/users.md), [users_safe_view](tables/users_safe_view.md) |  |
-| `src/pages/EmployeeDashboard.tsx` | [employee_comments](tables/employee_comments.md), [locations](tables/locations.md), [message_replies](tables/message_replies.md), [rate_configs](tables/rate_configs.md), [work_items](tables/work_items.md), [work_logs](tables/work_logs.md) |  |
-| `src/pages/FinanceDashboard.tsx` |  | `get_report_data` |
-| `src/pages/FinanceThisWeek.tsx` | [clients](tables/clients.md), [locations](tables/locations.md), [rate_configs](tables/rate_configs.md), [users](tables/users.md), [work_items](tables/work_items.md), [work_logs](tables/work_logs.md), [work_types](tables/work_types.md) |  |
-| `src/pages/Locations.tsx` | [locations](tables/locations.md) |  |
-| `src/pages/Messages.tsx` | [client_portal_users](tables/client_portal_users.md), [employee_comments](tables/employee_comments.md), [locations](tables/locations.md), [message_reads](tables/message_reads.md), [message_replies](tables/message_replies.md) | `get_user_display_info` |
-| `src/pages/RateCard.tsx` | [clients](tables/clients.md), [locations](tables/locations.md), [rate_configs](tables/rate_configs.md), [work_types](tables/work_types.md) |  |
-| `src/pages/Users.tsx` | [locations](tables/locations.md), [user_locations](tables/user_locations.md), [user_roles](tables/user_roles.md), [users](tables/users.md) |  |
-| `src/pages/WorkItems.tsx` | [clients](tables/clients.md), [locations](tables/locations.md), [rate_configs](tables/rate_configs.md), [work_items](tables/work_items.md), [work_types](tables/work_types.md) |  |
-| `src/pages/WorkTypes.tsx` | [work_types](tables/work_types.md) |  |
-| `src/pages/admin/PortalRequests.tsx` | [client_portal_access_requests](tables/client_portal_access_requests.md), [client_portal_location_access](tables/client_portal_location_access.md), [client_portal_users](tables/client_portal_users.md), [locations](tables/locations.md) |  |
-| `src/pages/admin/PortalUsers.tsx` | [client_portal_location_access](tables/client_portal_location_access.md), [client_portal_users](tables/client_portal_users.md), [locations](tables/locations.md) | `get_portal_users_email_auth` |
-| `src/pages/dealership/DealershipRates.tsx` | [clients](tables/clients.md), [locations](tables/locations.md), [system_settings](tables/system_settings.md) |  |
-| `src/pages/dealership/DealershipReport.tsx` |  | `get_dealership_report_data` |
-| `src/pages/dealership/DealershipRequests.tsx` | [clients](tables/clients.md), [locations](tables/locations.md), [user_locations](tables/user_locations.md) | `get_user_display_info` |
-| `src/pages/payroll/PayrollDashboard.tsx` | [payroll_employee_lines](tables/payroll_employee_lines.md), [payroll_hours_imports](tables/payroll_hours_imports.md), [payroll_pay_codes](tables/payroll_pay_codes.md), [payroll_periods](tables/payroll_periods.md), [payroll_run_lines](tables/payroll_run_lines.md), [payroll_work_type_map](tables/payroll_work_type_map.md), [users_safe_view](tables/users_safe_view.md), [work_logs](tables/work_logs.md) |  |
-| `src/pages/portal/PortalAuthCallback.tsx` | [system_settings](tables/system_settings.md) | `get_portal_my_locations` |
-| `src/pages/portal/PortalDashboard.tsx` |  | `get_portal_my_locations` |
-| `src/pages/portal/PortalLocationHistory.tsx` |  | `get_portal_dealership_history`, `get_portal_my_locations`, `get_portal_work_history` |
-| `src/pages/portal/PortalLogin.tsx` | [system_settings](tables/system_settings.md) |  |
-| `src/pages/portal/PortalMessages.tsx` | [employee_comments](tables/employee_comments.md), [message_replies](tables/message_replies.md) | `get_portal_my_locations`, `get_user_display_info` |
-| `src/pages/portal/PortalOnboarding.tsx` |  |  |
-| `src/pages/portal/PortalRequestAccess.tsx` | [client_portal_access_requests](tables/client_portal_access_requests.md), [client_portal_users](tables/client_portal_users.md), [locations](tables/locations.md) |  |
-| `src/pages/portal/PortalRequestWash.tsx` | [client_portal_users](tables/client_portal_users.md), [employee_comments](tables/employee_comments.md) | `get_portal_location_work_items`, `get_portal_my_locations` |
-| `src/pages/portal/PortalSignup.tsx` |  |  |
+| File | Tables (operations) | RPCs | Edge functions |
+| --- | --- | --- | --- |
+| `src/components/AddVehicleModal.tsx` | [rate_configs](tables/rate_configs.md) (select), [work_items](tables/work_items.md) (insert, select) |  |  |
+| `src/components/CSVImportModal.tsx` | [clients](tables/clients.md) (select), [locations](tables/locations.md) (select), [rate_configs](tables/rate_configs.md) (insert, select, update), [work_items](tables/work_items.md) (insert), [work_types](tables/work_types.md) (insert, select) |  |  |
+| `src/components/ClientSetupWizard.tsx` | [clients](tables/clients.md) (insert, select), [locations](tables/locations.md) (insert, select) |  |  |
+| `src/components/CreateClientInlineModal.tsx` | [clients](tables/clients.md) (insert, select) |  |  |
+| `src/components/CreateLocationInlineModal.tsx` | [locations](tables/locations.md) (insert, select) |  |  |
+| `src/components/CreateLocationModal.tsx` | [clients](tables/clients.md) (select), [locations](tables/locations.md) (insert, select) |  |  |
+| `src/components/CreateUserModal.tsx` | [locations](tables/locations.md) (select), [user_locations](tables/user_locations.md) (insert), [users](tables/users.md) (select) |  | `create-user`, `send-welcome-email` |
+| `src/components/EditLocationModal.tsx` | [clients](tables/clients.md) (select), [locations](tables/locations.md) (select, update) |  |  |
+| `src/components/EditServiceModal.tsx` | [rate_configs](tables/rate_configs.md) (update), [work_items](tables/work_items.md) (update), [work_types](tables/work_types.md) (select) |  |  |
+| `src/components/EditUserModal.tsx` | [locations](tables/locations.md) (select), [user_locations](tables/user_locations.md) (delete, insert, select), [user_roles](tables/user_roles.md) (delete, insert), [users](tables/users.md) (select, update) |  |  |
+| `src/components/EmployeeCommentSection.tsx` | [employee_comments](tables/employee_comments.md) (insert, select), [message_replies](tables/message_replies.md) (select) |  |  |
+| `src/components/ErrorReportButton.tsx` | [error_reports](tables/error_reports.md) (insert) |  |  |
+| `src/components/LocationTable.tsx` | [clients](tables/clients.md) (select), [users](tables/users.md) (select) |  |  |
+| `src/components/LogWorkModal.tsx` | [work_logs](tables/work_logs.md) (insert) |  |  |
+| `src/components/MyErrorReports.tsx` | [error_report_replies](tables/error_report_replies.md) (insert, select), [error_reports](tables/error_reports.md) (select) | `get_user_display_info` |  |
+| `src/components/UserSearchInput.tsx` | [users_safe_view](tables/users_safe_view.md) (select) |  |  |
+| `src/components/UserTable.tsx` |  |  | `delete-user`, `reset-user-password`, `send-welcome-email` |
+| `src/components/WorkItemGrid.tsx` | [work_items](tables/work_items.md) (select) |  |  |
+| `src/components/dealership/DealershipWashCard.tsx` | [locations](tables/locations.md) (select) |  |  |
+| `src/components/dealership/RequestDealershipLocationModal.tsx` | [clients](tables/clients.md) (select), [locations](tables/locations.md) (select) |  |  |
+| `src/components/reports/ReportFilters.tsx` | [clients](tables/clients.md) (select), [locations](tables/locations.md) (select), [work_types](tables/work_types.md) (select) |  |  |
+| `src/components/reports/TemplateManager.tsx` | [report_templates](tables/report_templates.md) (delete, insert, select) |  |  |
+| `src/components/tickets/SubmitTicketModal.tsx` | [clients](tables/clients.md) (select), [locations](tables/locations.md) (select), [ticket_line_items](tables/ticket_line_items.md) (insert), [tickets](tables/tickets.md) (insert, select) |  |  |
+| `src/components/tickets/TicketList.tsx` | [ticket_line_items](tables/ticket_line_items.md) (select), [ticket_replies](tables/ticket_replies.md) (insert, select), [tickets](tables/tickets.md) (select, update) | `get_user_display_info` |  |
+| `src/contexts/AuthContext.tsx` | [client_portal_users](tables/client_portal_users.md) (select), [locations](tables/locations.md) (select), [user_locations](tables/user_locations.md) (select), [users](tables/users.md) (select) |  |  |
+| `src/hooks/usePendingPortalRequestCount.ts` | [client_portal_access_requests](tables/client_portal_access_requests.md) (select), [client_portal_users](tables/client_portal_users.md) (select) |  |  |
+| `src/hooks/usePortalUnreadCount.ts` | [error_report_replies](tables/error_report_replies.md) (select), [message_replies](tables/message_replies.md) (select), [user_message_views](tables/user_message_views.md) (select, upsert) |  |  |
+| `src/hooks/useUnreadMessageCount.ts` | [employee_comments](tables/employee_comments.md) (select), [user_message_views](tables/user_message_views.md) (select, upsert) |  |  |
+| `src/hooks/useUnreadTicketCount.ts` | [ticket_views](tables/ticket_views.md) (select, upsert), [tickets](tables/tickets.md) (select) |  |  |
+| `src/lib/cutoff.ts` | [system_settings](tables/system_settings.md) (select, update), [system_settings_audit](tables/system_settings_audit.md) (select, update) |  |  |
+| `src/lib/dealershipRates.ts` | [system_settings](tables/system_settings.md) (select) |  |  |
+| `src/lib/roleUtils.ts` | [user_roles](tables/user_roles.md) (select) |  |  |
+| `src/pages/ActivityLogs.tsx` |  | `get_user_display_info` |  |
+| `src/pages/AdminDashboard.tsx` | [clients](tables/clients.md) (select), [error_report_replies](tables/error_report_replies.md) (insert, select), [error_reports](tables/error_reports.md) (select, update), [locations](tables/locations.md) (select), [users](tables/users.md) (select) | `get_user_display_info` |  |
+| `src/pages/AdminSettings.tsx` | [system_settings_audit](tables/system_settings_audit.md) (select), [users](tables/users.md) (select) |  |  |
+| `src/pages/ChangePassword.tsx` | [users](tables/users.md) (update) | `get_portal_account_status` |  |
+| `src/pages/Clients.tsx` | [clients](tables/clients.md) (delete, insert, select, update) |  |  |
+| `src/pages/CreateUser.tsx` | [locations](tables/locations.md) (select), [users](tables/users.md) (insert), [users_safe_view](tables/users_safe_view.md) (select) |  |  |
+| `src/pages/EmployeeDashboard.tsx` | [employee_comments](tables/employee_comments.md) (insert, select), [locations](tables/locations.md) (select), [message_replies](tables/message_replies.md) (select), [rate_configs](tables/rate_configs.md) (select), [work_items](tables/work_items.md) (select), [work_logs](tables/work_logs.md) (delete, insert, select, update) |  |  |
+| `src/pages/FinanceDashboard.tsx` |  | `get_report_data` |  |
+| `src/pages/FinanceThisWeek.tsx` | [clients](tables/clients.md) (select), [locations](tables/locations.md) (select), [rate_configs](tables/rate_configs.md) (select), [users](tables/users.md) (select), [work_items](tables/work_items.md) (select), [work_logs](tables/work_logs.md) (select), [work_types](tables/work_types.md) (select) |  |  |
+| `src/pages/Locations.tsx` | [locations](tables/locations.md) (select, update) |  |  |
+| `src/pages/Messages.tsx` | [client_portal_users](tables/client_portal_users.md) (select), [employee_comments](tables/employee_comments.md) (insert, select), [locations](tables/locations.md) (select), [message_reads](tables/message_reads.md) (insert, select), [message_replies](tables/message_replies.md) (insert, select) | `get_user_display_info` |  |
+| `src/pages/RateCard.tsx` | [clients](tables/clients.md) (select), [locations](tables/locations.md) (select), [rate_configs](tables/rate_configs.md) (delete, insert, select, update), [work_types](tables/work_types.md) (select) |  |  |
+| `src/pages/Users.tsx` | [locations](tables/locations.md) (select), [user_locations](tables/user_locations.md) (select), [user_roles](tables/user_roles.md) (insert, select), [users](tables/users.md) (insert, select) |  |  |
+| `src/pages/WorkItems.tsx` | [clients](tables/clients.md) (select), [locations](tables/locations.md) (select), [rate_configs](tables/rate_configs.md) (select), [work_items](tables/work_items.md) (delete, insert, select, update), [work_types](tables/work_types.md) (select) |  |  |
+| `src/pages/WorkTypes.tsx` | [work_types](tables/work_types.md) (delete, insert, select, update) |  |  |
+| `src/pages/admin/PortalRequests.tsx` | [client_portal_access_requests](tables/client_portal_access_requests.md) (select), [client_portal_location_access](tables/client_portal_location_access.md) (upsert), [client_portal_users](tables/client_portal_users.md) (select, update), [locations](tables/locations.md) (select) |  | `approve-portal-request`, `delete-portal-user`, `set-portal-approval` |
+| `src/pages/admin/PortalUsers.tsx` | [client_portal_location_access](tables/client_portal_location_access.md) (delete, insert), [client_portal_users](tables/client_portal_users.md) (select, update), [locations](tables/locations.md) (select) | `get_portal_users_email_auth` | `delete-portal-user`, `send-portal-password-reset` |
+| `src/pages/dealership/DealershipRates.tsx` | [clients](tables/clients.md) (select), [locations](tables/locations.md) (select), [system_settings](tables/system_settings.md) (select, update) |  |  |
+| `src/pages/dealership/DealershipReport.tsx` |  | `get_dealership_report_data` |  |
+| `src/pages/dealership/DealershipRequests.tsx` | [clients](tables/clients.md) (insert, select), [locations](tables/locations.md) (insert, select), [user_locations](tables/user_locations.md) (insert) | `get_user_display_info` |  |
+| `src/pages/payroll/PayrollDashboard.tsx` | [payroll_employee_lines](tables/payroll_employee_lines.md) (insert, select), [payroll_hours_imports](tables/payroll_hours_imports.md) (delete, insert, select), [payroll_pay_codes](tables/payroll_pay_codes.md) (insert, select), [payroll_periods](tables/payroll_periods.md) (select, update, upsert), [payroll_run_lines](tables/payroll_run_lines.md) (delete, insert, select, update), [payroll_work_type_map](tables/payroll_work_type_map.md) (select), [users_safe_view](tables/users_safe_view.md) (select), [work_logs](tables/work_logs.md) (select) |  |  |
+| `src/pages/portal/PortalAuthCallback.tsx` | [system_settings](tables/system_settings.md) (select) | `get_portal_my_locations` | `ensure-portal-user`, `record-portal-login` |
+| `src/pages/portal/PortalDashboard.tsx` |  | `get_portal_my_locations` |  |
+| `src/pages/portal/PortalLocationHistory.tsx` |  | `get_portal_dealership_history`, `get_portal_my_locations`, `get_portal_work_history` |  |
+| `src/pages/portal/PortalLogin.tsx` | [system_settings](tables/system_settings.md) (select) |  | `record-portal-login` |
+| `src/pages/portal/PortalMessages.tsx` | [employee_comments](tables/employee_comments.md) (insert, select), [message_replies](tables/message_replies.md) (insert, select) | `get_portal_my_locations`, `get_user_display_info` |  |
+| `src/pages/portal/PortalOnboarding.tsx` |  |  | `submit-portal-onboarding` |
+| `src/pages/portal/PortalRequestAccess.tsx` | [client_portal_access_requests](tables/client_portal_access_requests.md) (insert, select), [client_portal_users](tables/client_portal_users.md) (select), [locations](tables/locations.md) (select) |  |  |
+| `src/pages/portal/PortalRequestWash.tsx` | [client_portal_users](tables/client_portal_users.md) (select), [employee_comments](tables/employee_comments.md) (insert) | `get_portal_location_work_items`, `get_portal_my_locations` |  |
+| `src/pages/portal/PortalSignup.tsx` |  |  | `create-portal-user` |

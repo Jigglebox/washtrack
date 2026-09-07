@@ -45,6 +45,10 @@ erDiagram
 | Users manage their own ticket view marker | SELECT | authenticated | `user_id = auth.uid()` |  |  | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
 | Users update their own ticket view marker | UPDATE | authenticated | `user_id = auth.uid()` | `user_id = auth.uid()` |  | `20260831234441_48116fbc-7407-44a6-b254-8ab925dbec00.sql` |
 
+## Review notes
+
+- **low** `connectedness/loose-links`: 1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references. `user_id → users`
+
 ## Used by code
 
 **Frontend**

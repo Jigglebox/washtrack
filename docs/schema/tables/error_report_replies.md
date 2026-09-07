@@ -47,6 +47,11 @@ erDiagram
 | Reporter or super admin can insert replies | INSERT | authenticated |  | `user_id = auth.uid() AND ( EXISTS (SELECT 1 FROM public.error_reports er WHERE er.id = report_id AND er.reported_by = a…` | `is_super_admin` | `20260622231126_8bdc1f64-efcd-40a1-bc50-9c17cc5f8686.sql` |
 | Reporter or super admin can view replies | SELECT | authenticated | `EXISTS (SELECT 1 FROM public.error_reports er WHERE er.id = report_id AND er.reported_by = auth.uid()) OR public.is_sup…` |  | `is_super_admin` | `20260622231126_8bdc1f64-efcd-40a1-bc50-9c17cc5f8686.sql` |
 
+## Review notes
+
+- **low** `connectedness/lookalike-tables`: These two tables share 67% of their columns. Check whether one duplicates the other's purpose. `body, created_at, id, user_id`
+- **low** `connectedness/loose-links`: 1 link exist only by column name; the database does not enforce them, so deleting the target leaves dangling references. `user_id → users`
+
 ## Used by code
 
 **Frontend**

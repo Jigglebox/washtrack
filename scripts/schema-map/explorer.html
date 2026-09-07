@@ -4,7 +4,7 @@
 <style>
 :root {
   --ground: #F3F6F9; --surface: #FFFFFF; --surface-2: #E9EFF4; --ink: #16212B; --muted: #5B6B7A; --line: #D3DCE4; --line-strong: #AEBCC8;
-  --accent: #0F8B8D; --accent-ink: #0B6E70; --accent-soft: #D9F0F0; --auto: #C7791A; --auto-soft: #FBEBD3; --loose: #8A9AA8;
+  --accent: #0F8B8D; --accent-ink: #0B6E70; --accent-soft: #D9F0F0; --auto: #C7791A; --warn: #B8541A; --auto-soft: #FBEBD3; --loose: #8A9AA8;
   --g0: #0F8B8D; --g1: #4C5FD6; --g2: #9A4FA8; --g3: #C7791A; --g4: #6B8E23; --g5: #C24A3A; --g6: #2E86C1; --g7: #C4457C; --g8: #5F7385; --g9: #2A9D6F; --g10: #8B6D2E; --g11: #4A7C9D;
   --shadow: 0 1px 2px rgba(22,33,43,.06), 0 6px 20px rgba(22,33,43,.08);
   --radius: 10px;
@@ -15,14 +15,14 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --ground: #0F171E; --surface: #16222C; --surface-2: #1D2B37; --ink: #E8EEF3; --muted: #93A3B1; --line: #263440; --line-strong: #3A4B59;
-    --accent: #3FC1C3; --accent-ink: #7FDCDD; --accent-soft: #143B3C; --auto: #E9A23B; --auto-soft: #3E2E14; --loose: #6E7F8C;
+    --accent: #3FC1C3; --accent-ink: #7FDCDD; --accent-soft: #143B3C; --auto: #E9A23B; --warn: #E8895A; --auto-soft: #3E2E14; --loose: #6E7F8C;
     --g0: #3FC1C3; --g1: #8C9AF0; --g2: #C58AD2; --g3: #E9A23B; --g4: #9DC24C; --g5: #E6796A; --g6: #63B3F0; --g7: #EE7FAE; --g8: #94A7B8; --g9: #52C795; --g10: #C9A65B; --g11: #7FB0D1;
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
   }
 }
 :root[data-theme="dark"] {
   --ground: #0F171E; --surface: #16222C; --surface-2: #1D2B37; --ink: #E8EEF3; --muted: #93A3B1; --line: #263440; --line-strong: #3A4B59;
-  --accent: #3FC1C3; --accent-ink: #7FDCDD; --accent-soft: #143B3C; --auto: #E9A23B; --auto-soft: #3E2E14; --loose: #6E7F8C;
+  --accent: #3FC1C3; --accent-ink: #7FDCDD; --accent-soft: #143B3C; --auto: #E9A23B; --warn: #E8895A; --auto-soft: #3E2E14; --loose: #6E7F8C;
   --g0: #3FC1C3; --g1: #8C9AF0; --g2: #C58AD2; --g3: #E9A23B; --g4: #9DC24C; --g5: #E6796A; --g6: #63B3F0; --g7: #EE7FAE; --g8: #94A7B8; --g9: #52C795; --g10: #C9A65B; --g11: #7FB0D1;
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
 }
@@ -99,6 +99,12 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
 .node text { font-family: var(--font-display); font-size: 13px; font-weight: 600; fill: var(--ink); pointer-events: none; }
 .node text.sub { font-family: var(--font-body); font-weight: 400; font-size: 11px; fill: var(--muted); }
 .node .badge { fill: var(--auto); }
+.node .flag { fill: var(--warn); }
+.note { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: start; margin: 0 0 10px; font-size: 13px; }
+.note .sev { font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; color: var(--surface); background: var(--warn); }
+.note .sev.medium { background: var(--muted); }
+.note .rule { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--muted); display: block; margin-top: 2px; }
+.note button { all: unset; cursor: pointer; color: var(--accent); text-decoration: underline; }
 .node.groupnode rect { fill: var(--surface); stroke-width: 2; }
 .node.groupnode .fill { fill: var(--gc); opacity: .12; stroke: none; }
 .node.groupnode text.title { font-size: 15px; }
@@ -367,7 +373,7 @@ function render() {
       edges = edges.filter((e) => !(e.kind === 'solid' && (junction.has(e.a) || junction.has(e.b))));
       for (const j of junction) shown.delete(j);
     }
-    nodes = [...shown].filter((n) => tables.has(n)).map((n) => { const t = tables.get(n); return { id: n, title: t.label, sub: set.has(n) ? '' : `in ${groups.find((g) => g.name === t.group)?.label || 'another group'}`, group: t.group, kind: 'table', stub: !set.has(n), hub: t.isHub, auto: t.triggers.length > 0, w: Math.max(110, t.label.length * 8 + 30), h: set.has(n) ? 40 : 44 }; });
+    nodes = [...shown].filter((n) => tables.has(n)).map((n) => { const t = tables.get(n); return { id: n, title: t.label, sub: set.has(n) ? '' : `in ${groups.find((g) => g.name === t.group)?.label || 'another group'}`, group: t.group, kind: 'table', stub: !set.has(n), hub: t.isHub, auto: t.triggers.length > 0, flag: t.notes && t.notes.length > 0, w: Math.max(110, t.label.length * 8 + 30), h: set.has(n) ? 40 : 44 }; });
   }
   current = { nodes, edges };
   const pos = layout(nodes, edges.map((e) => ({ a: e.a, b: e.b, w: e.kind === 'grouplink' ? 1 + Math.log(e.n) : 1, len: e.kind === 'grouplink' ? 1.3 : 1 })), W, H, { pad: state.level === 'groups' ? 110 : 80, seed: state.level === 'groups' ? 3 : 5 });
@@ -404,6 +410,7 @@ function render() {
     g.append(el('text', { x: 26, y: n.sub ? hh / 2 - 2 : hh / 2 + 5, class: n.kind === 'group' ? 'title' : '' }, n.title));
     if (n.sub) g.append(el('text', { x: 26, y: hh / 2 + 13, class: 'sub' }, n.sub));
     if (n.auto) g.append(el('circle', { cx: w - 11, cy: 11, r: 4.5, class: 'badge' }));
+    if (n.flag) g.append(el('circle', { cx: w - 11, cy: hh - 11, r: 4.5, class: 'flag' }));
     n.el = g; n.pos = p;
     const go = () => { if (n.kind === 'group') { state.level = 'group'; state.group = n.id; state.selected = null; render(); renderPanel(); renderRail(); } else select(n.id); };
     g.addEventListener('click', go);
@@ -485,6 +492,12 @@ function renderPanel() {
       for (const g of groups) { const b = h('button', { onclick: () => { state.level = 'group'; state.group = g.name; state.selected = null; render(); renderPanel(); renderRail(); } }, h('span', { class: 'dot' }), h('span', {}, h('b', {}, g.label), h('br'), h('small', {}, g.what || '')), h('small', {}, `${g.tables.length}`)); b.style.setProperty('--gc', gcolor(g.name)); list.append(b); }
       ov.append(list);
       if (DATA.live) ov.append(h('p', { class: 'who' }, `Row counts come from the live database (${DATA.live}).`));
+      if (DATA.review && DATA.review.top.length) {
+        ov.append(h('div', { class: 'eyebrow' }, `Needs a look (${DATA.review.counts.high} to fix or confirm, ${DATA.review.counts.medium} to check)`));
+        ov.append(h('p', { class: 'who' }, 'Places where a piece does not follow the conventions the rest of the app uses, or is not connected to anything. Tables with one of these carry an orange dot on the map.'));
+        for (const f of DATA.review.top) ov.append(h('div', { class: 'note' }, h('span', { class: `sev ${f.sev}` }, f.sev), h('span', {}, f.table ? h('button', { onclick: () => select(f.table) }, label(f.table)) : h('b', {}, f.subject), f.table && f.subject !== f.table ? ` · ${f.subject}` : '', h('br'), f.msg, h('span', { class: 'rule' }, f.rule))));
+        if (DATA.review.changes) ov.append(h('p', { class: 'who' }, `Since ${DATA.review.changes.baseline}: ${DATA.review.changes.added} added, ${DATA.review.changes.removed} removed, ${DATA.review.changes.changed} changed. Details are in changes.md next to this file.`));
+      }
     }
     p.append(ov); return;
   }
@@ -509,6 +522,7 @@ function renderPanel() {
   if (knots.length) sec('Any combination with', knots.map((l) => h('li', {}, ...tlink(l.from === t.name ? l.to : l.from), h('span', {}, ` — ${phrase(l)}`))), '');
   if (loose.length) { const s = h('section', {}, h('h3', {}, 'Loose links'), h('p', { class: 'loose-note' }, 'The app fills these in, but the database does not check them. If the other record is deleted, this one keeps pointing at nothing.')); const ul = h('ul'); for (const l of loose) ul.append(h('li', {}, ...tlink(l.from === t.name ? l.to : l.from), h('span', {}, ` — ${phrase(l)}`))); s.append(ul); p.append(s); }
   if (t.triggers.length) { const s = h('section', {}, h('h3', {}, 'Happens automatically')); for (const tr of t.triggers) { const n = h('div', { class: 'auto-note' }, h('b', {}, '●'), h('span', {}, tr.text, tr.touches.length ? h('span', {}, ' Touches: ') : '', ...tr.touches.flatMap((x, i) => [i ? ', ' : '', tlink(x)[1]]))); s.append(n); } p.append(s); }
+  if (t.notes && t.notes.length) { const s = h('section', {}, h('h3', {}, 'Review notes')); for (const n of t.notes) s.append(h('div', { class: 'note' }, h('span', { class: `sev ${n.sev}` }, n.sev), h('span', {}, n.msg, n.ev ? h('span', { class: 'mono' }, ` ${n.ev.slice(0, 120)}`) : '', h('span', { class: 'rule' }, n.rule)))); p.append(s); }
   if (t.pages.length || t.edge.length) {
     const s = h('section', {}, h('h3', {}, 'Where it shows up in the app'));
     const ul = h('ul');

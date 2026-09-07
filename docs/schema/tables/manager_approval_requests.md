@@ -65,6 +65,10 @@ erDiagram
 | Managers can update assigned requests | UPDATE | public | `auth.uid() = manager_id AND status = 'pending'` |  |  | `20251030043513_4d19a151-b457-4873-802e-d5655eabb411.sql` |
 | Managers can view assigned requests | SELECT | public | `auth.uid() = manager_id AND status = 'pending'` |  |  | `20251030043513_4d19a151-b457-4873-802e-d5655eabb411.sql` |
 
+## Review notes
+
+- **medium** `connectedness/unused-table`: No page, edge function, database function, rule or automatic action reads or writes this table. It may be dead, or something was built but never wired up.
+
 ## Used by code
 
 _No direct queries found in code._

@@ -75,6 +75,10 @@ erDiagram
 - policy "Comment authors can reply to their own conversation" on [message_replies](../tables/message_replies.md)
 - policy "Employees can view replies to their comments" on [message_replies](../tables/message_replies.md)
 
+## Review notes
+
+- **low** `connectedness/loose-links`: 2 links exist only by column name; the database does not enforce them, so deleting the target leaves dangling references. `location_id → locations; employee_id → users`
+
 ## Used by code
 
 **Frontend**

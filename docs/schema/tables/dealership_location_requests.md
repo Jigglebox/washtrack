@@ -85,6 +85,10 @@ erDiagram
 | --- | --- | --- | --- |
 | `trg_dealership_requests_updated` | BEFORE UPDATE FOR EACH ROW | `set_updated_at()` |  |
 
+## Review notes
+
+- **low** `connectedness/loose-links`: 2 links exist only by column name; the database does not enforce them, so deleting the target leaves dangling references. `requested_by → users; reviewed_by → users`
+
 ## Used by code
 
 _No direct queries found in code._

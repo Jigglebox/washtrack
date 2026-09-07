@@ -65,6 +65,10 @@ erDiagram
 | Finance users can view shared templates | SELECT | public | `has_role_or_higher(auth.uid(), 'finance'::app_role)` |  | `has_role_or_higher` | `20251106072318_f52b608e-d650-4fb0-829a-ebc8971a41da.sql` |
 | Template deletion by owner or higher role | DELETE | authenticated | `is_system_template = false AND public.can_delete_report_template(created_by)` |  | `can_delete_report_template` | `20260812224139_2a25cb70-c1e7-4404-b28e-b242b9208e35.sql` |
 
+## Review notes
+
+- **low** `consistency/updated-at-not-maintained`: Has an updated_at column but no automatic action keeps it current, unlike 12 other tables.
+
 ## Used by code
 
 **Frontend**

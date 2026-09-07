@@ -230,6 +230,8 @@ export function buildGraph(types: ParsedTypes, mig: MigrationState, codeRefs: Co
     clusters,
     polymorphic,
     warnings: uniq(warnings),
+    conventions: { roles: [], policyHelpers: [], roleTables: [] },
+    findings: [],
   };
 }
 

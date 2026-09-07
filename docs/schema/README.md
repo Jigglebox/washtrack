@@ -1,4 +1,4 @@
-# WashTrack schema map
+# washtrack-main schema map
 
 _Generated 2026-09-07 by `scripts/schema-map`. Do not edit by hand; run `npm run schema:map`._
 
@@ -20,7 +20,7 @@ How this database fits together: every table, how they reference each other, whi
 | Triggers | 16 |
 | SQL functions | 32 |
 | Edge functions | 15 |
-| Frontend files querying the DB | 65 |
+| Frontend files querying the DB | 63 |
 
 ## Domains
 
