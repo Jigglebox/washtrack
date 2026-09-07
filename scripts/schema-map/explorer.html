@@ -210,7 +210,7 @@ svg .bg { fill: transparent; }
     </aside>
     <div class="canvas" id="canvas">
       <div class="crumbs" id="crumbs"></div>
-      <div class="tools"><button id="btn-tidy" title="Forget the positions you dragged and lay this view out again">Tidy up</button><button id="btn-all" aria-pressed="false">Show every table</button></div>
+      <div class="tools"><button id="btn-tidy" title="Forget the positions you dragged and lay this view out again with as few crossing lines as possible">Tidy up</button><button id="btn-all" aria-pressed="false">Show every table</button></div>
       <div class="hint">Drag a box to move it, drag the empty background to move around, scroll to zoom, double-click the background to recenter. Your arrangement is remembered on this device.</div>
       <svg id="svg" role="img" aria-label="Map of database tables and their connections"></svg>
       <div class="legend"><span><i></i> belongs to</span><span><i class="dash"></i> loose link</span><span><i class="knot"></i> any combination</span><span><b></b> automatic action</span></div>
@@ -429,6 +429,114 @@ function layout(nodes, edges, W, H, opts = {}) {
   return pos;
 }
 
+// ---- untangle: rearrange so as few lines as possible cross, then keep boxes apart
+function segmentsCross(a, b, c, d) {
+  const o = (p, q, r) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x));
+  const o1 = o(a, b, c), o2 = o(a, b, d), o3 = o(c, d, a), o4 = o(c, d, b);
+  return o1 !== o2 && o3 !== o4 && o1 !== 0 && o2 !== 0 && o3 !== 0 && o4 !== 0;
+}
+function countCrossings(edges, pos) {
+  let n = 0;
+  for (let i = 0; i < edges.length; i++) for (let j = i + 1; j < edges.length; j++) {
+    const e = edges[i], f = edges[j];
+    if (e.a === f.a || e.a === f.b || e.b === f.a || e.b === f.b) continue;
+    const pa = pos.get(e.a), pb = pos.get(e.b), pc = pos.get(f.a), pd = pos.get(f.b);
+    if (pa && pb && pc && pd && segmentsCross(pa, pb, pc, pd)) n++;
+  }
+  return n;
+}
+function untangle(nodes, edges, pos, W, H, opts = {}) {
+  const ids = nodes.map((n) => n.id).filter((id) => pos.has(id));
+  const size = new Map(nodes.map((n) => [n.id, { w: (n.w || 110) + 30, h: (n.h || 40) + 30 }]));
+  const es = edges.filter((e) => pos.has(e.a) && pos.has(e.b) && e.a !== e.b);
+  const nb = new Map(ids.map((id) => [id, []]));
+  for (const e of es) { nb.get(e.a).push(e.b); nb.get(e.b).push(e.a); }
+  const rnd = seeded(ids.length * 131 + 7);
+  const overlapArea = () => {
+    let a = 0;
+    for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) {
+      const pa = pos.get(ids[i]), pb = pos.get(ids[j]), sa = size.get(ids[i]), sb = size.get(ids[j]);
+      const ox = (sa.w + sb.w) / 2 - Math.abs(pa.x - pb.x), oy = (sa.h + sb.h) / 2 - Math.abs(pa.y - pb.y);
+      if (ox > 0 && oy > 0) a += ox * oy;
+    }
+    return a;
+  };
+  const edgeLength = () => es.reduce((t, e) => t + Math.hypot(pos.get(e.a).x - pos.get(e.b).x, pos.get(e.a).y - pos.get(e.b).y), 0);
+  // Crossings dominate; then overlap; then shorter lines.
+  const score = () => countCrossings(es, pos) * 1e6 + overlapArea() * 40 + edgeLength();
+  let best = score();
+
+  // Phase 1: swap the positions of two boxes whenever that removes crossings.
+  const effort = opts.effort || 1;
+  for (let pass = 0; pass < 8 * effort; pass++) {
+    let improved = false;
+    for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) {
+      const a = pos.get(ids[i]), b = pos.get(ids[j]);
+      [a.x, b.x] = [b.x, a.x]; [a.y, b.y] = [b.y, a.y];
+      const sc = score();
+      if (sc < best - 1e-9) { best = sc; improved = true; }
+      else { [a.x, b.x] = [b.x, a.x]; [a.y, b.y] = [b.y, a.y]; }
+    }
+    if (!improved) break;
+  }
+  // Phase 2: nudge each box toward the middle of its neighbours or to a nearby spot, if that helps.
+  const pad = opts.pad || 60;
+  const step = Math.max(40, Math.min(W, H) / 8);
+  for (let pass = 0; pass < 4 * effort; pass++) {
+    let improved = false;
+    for (const id of ids) {
+      const p = pos.get(id); const ox = p.x, oy = p.y;
+      const cands = [];
+      const ns = nb.get(id);
+      if (ns.length) cands.push({ x: ns.reduce((t, n) => t + pos.get(n).x, 0) / ns.length, y: ns.reduce((t, n) => t + pos.get(n).y, 0) / ns.length });
+      for (const r of [step, step / 2]) for (let k = 0; k < 8; k++) { const ang = k * Math.PI / 4; cands.push({ x: ox + Math.cos(ang) * r, y: oy + Math.sin(ang) * r }); }
+      for (let k = 0; k < 4 * effort; k++) cands.push({ x: pad + rnd() * (W - 2 * pad), y: pad + rnd() * (H - 2 * pad) });
+      for (const c of cands) {
+        p.x = Math.min(W - pad, Math.max(pad, c.x)); p.y = Math.min(H - pad, Math.max(pad, c.y));
+        const sc = score();
+        if (sc < best - 1e-9) { best = sc; improved = true; break; }
+        p.x = ox; p.y = oy;
+      }
+    }
+    if (!improved) break;
+  }
+  // Phase 3: make sure nothing overlaps and everything is inside the frame.
+  separate(nodes, pos, W, H);
+  return { crossings: countCrossings(es, pos) };
+}
+function separate(nodes, pos, W, H) {
+  const size = new Map(nodes.map((n) => [n.id, { w: (n.w || 110) + 26, h: (n.h || 40) + 26 }]));
+  for (let it = 0; it < 80; it++) {
+    let moved = false;
+    for (const a of nodes) for (const b of nodes) {
+      if (a.id >= b.id || !pos.has(a.id) || !pos.has(b.id)) continue;
+      const pa = pos.get(a.id), pb = pos.get(b.id), sa = size.get(a.id), sb = size.get(b.id);
+      const ox = (sa.w + sb.w) / 2 - Math.abs(pa.x - pb.x), oy = (sa.h + sb.h) / 2 - Math.abs(pa.y - pb.y);
+      if (ox <= 0 || oy <= 0) continue;
+      moved = true;
+      if (ox < oy) { const s = (pa.x < pb.x ? -1 : 1) * ox / 2; pa.x += s; pb.x -= s; }
+      else { const s = (pa.y < pb.y ? -1 : 1) * oy / 2; pa.y += s; pb.y -= s; }
+    }
+    for (const n of nodes) { if (!pos.has(n.id)) continue; const p = pos.get(n.id), sz = size.get(n.id); p.x = Math.min(W - sz.w / 2, Math.max(sz.w / 2, p.x)); p.y = Math.min(H - sz.h / 2, Math.max(sz.h / 2, p.y)); }
+    if (!moved) break;
+  }
+}
+/** Try a couple of starting arrangements, untangle each, keep the one with the fewest crossings. */
+function bestLayout(nodes, edges, W, H, opts = {}) {
+  const seeds = nodes.length > 20 ? [0, 11, 23, 37] : [0, 11];
+  const starts = seeds.map((d) => () => layout(nodes, edges, W, H, { pad: opts.pad || 90, seed: (opts.seed || 3) + d }));
+  if (typeof ringLayout === 'function' && nodes.length <= 24) starts.push(() => ringLayout(nodes, edges, W, H));
+  let bestPos = null, bestScore = Infinity;
+  for (const start of starts) {
+    const pos = start();
+    const r = untangle(nodes, edges, pos, W, H, opts);
+    const len = edges.reduce((t, e) => (pos.has(e.a) && pos.has(e.b)) ? t + Math.hypot(pos.get(e.a).x - pos.get(e.b).x, pos.get(e.a).y - pos.get(e.b).y) : t, 0);
+    const sc = r.crossings * 1e6 + len;
+    if (sc < bestScore) { bestScore = sc; bestPos = pos; }
+  }
+  return bestPos;
+}
+
 // ---- svg helpers
 function nodeBox(n) { return { w: n.w || Math.max(96, n.title.length * 8 + 28), h: n.h || 40 }; }
 function edgePath(pa, pb, a, b, curve) {
@@ -483,7 +591,8 @@ function render() {
   }
   current = { nodes, edges };
   const simple = edges.map((e) => ({ a: e.a, b: e.b, w: e.kind === 'grouplink' ? 1 + Math.log(e.n) : 1, len: e.kind === 'grouplink' ? 1.3 : 1 }));
-  const pos = state.level === 'all' ? layout(nodes, simple, W, H, { pad: 80, seed: 5 }) : ringLayout(nodes, simple, W, H);
+  const pos = bestLayout(nodes, simple, W, H, { pad: state.level === 'groups' ? 110 : 80, seed: state.level === 'groups' ? 3 : 5, effort: nodes.length > 20 ? 2 : 1 });
+  current.pos = pos;
   const storeKey = store.key();
   applySaved(pos, W, H, storeKey);
   const geometry = () => {
@@ -728,5 +837,6 @@ for (const b of document.querySelectorAll('.tabs button')) b.addEventListener('c
 let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (state.view === 'map') render(); if (state.view === 'flows') renderFlows(); }, 120); });
 
 renderRail(); renderPanel(); render();
+window.__wt = { crossings: () => countCrossings(current.edges.map((e) => ({ a: e.a, b: e.b })), current.pos) };
 })();
 </script>
