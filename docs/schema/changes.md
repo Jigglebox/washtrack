@@ -4,6 +4,6 @@ _Generated 2026-09-07 by `scripts/schema-map`. Do not edit by hand; run `npm run
 
 [Back to overview](README.md)
 
-Compared against **git HEAD (2e66473)**.
+Compared against **git HEAD (2d36119)**.
 
 _Nothing changed._
