@@ -110,16 +110,28 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
 .link.k-knot.bold { stroke-width: 5; }
 .dim { opacity: .18; }
 .faded { opacity: .12; }
-/* filter bar */
-.filters { position: absolute; bottom: 44px; right: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; max-width: 70%; background: color-mix(in srgb, var(--surface) 92%, transparent); padding: 6px 8px; border-radius: 10px; box-shadow: var(--shadow); font-size: 12px; z-index: 2; }
-.filters .lbl { color: var(--muted); font-family: var(--font-display); font-weight: 600; margin-right: 2px; }
-.filters button.chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 600; font-family: var(--font-display); }
-.filters button.chip[aria-pressed="true"] { border-color: var(--kc); background: color-mix(in srgb, var(--kc) 16%, var(--surface)); box-shadow: inset 0 0 0 1px var(--kc); }
-.filters button.chip i { display: inline-block; width: 22px; border-top: 3px solid var(--kc); }
-.filters button.chip i.dash { border-top-style: dashed; }
-.filters button.chip i.dot { border-top-style: dotted; }
-.filters button.clear { color: var(--accent-ink); font-weight: 600; font-family: var(--font-display); padding: 4px 6px; }
-.filters .count { color: var(--muted); font-variant-numeric: tabular-nums; }
+/* filter bar / legend */
+.filters { position: absolute; bottom: 44px; right: 12px; display: flex; flex-direction: column; gap: 6px; width: 340px; max-width: calc(100% - 24px); max-height: calc(100% - 110px); overflow: auto; background: color-mix(in srgb, var(--surface) 94%, transparent); padding: 10px 10px 8px; border-radius: 12px; box-shadow: var(--shadow); font-size: 13px; z-index: 2; }
+.filters .fhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.filters .lbl { color: var(--ink); font-family: var(--font-display); font-weight: 600; font-size: 13px; }
+.filters .fintro { margin: 0 0 2px; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.filters .flist { display: grid; gap: 4px; }
+.filters button.chip { display: grid; grid-template-columns: 34px 1fr auto; column-gap: 8px; row-gap: 3px; align-items: center; text-align: left; padding: 6px 8px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 13px; }
+.filters button.chip .name { font-weight: 600; font-family: var(--font-display); }
+.filters button.chip .count { color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.filters button.chip small { grid-column: 2 / 4; color: var(--muted); font-size: 12px; line-height: 1.4; font-weight: 400; }
+.filters button.chip .sw { width: 34px; height: 8px; display: block; }
+.filters button.chip .sw line { stroke: var(--kc); stroke-width: 3; }
+.filters button.chip[aria-pressed="true"] { border-color: var(--kc); background: color-mix(in srgb, var(--kc) 14%, var(--surface)); box-shadow: inset 0 0 0 1px var(--kc); }
+.filters button.chip.none { opacity: .5; }
+.filters button.collapse, .filters button.clear { color: var(--accent-ink); font-weight: 600; font-family: var(--font-display); font-size: 12px; padding: 2px 6px; border-radius: 6px; }
+.filters button.clear { align-self: flex-start; }
+/* collapsed: one row of chips */
+.filters.collapsed { width: auto; max-width: 70%; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 6px 8px; }
+.filters.collapsed .flist { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters.collapsed button.chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 9px; border-radius: 999px; }
+.filters.collapsed button.chip .sw { width: 22px; }
+.filters.collapsed button.chip .count { font-size: 11px; }
 .node { cursor: grab; }
 .node.dragging { cursor: grabbing; }
 svg.pannable { cursor: grab; }
@@ -630,28 +642,39 @@ function hideTip() { tip.style.display = 'none'; }
 
 // ---- connection kinds
 const KINDS = [
-  { id: 'fk', label: 'Belongs to', swatch: '', what: 'A record on one end belongs to one record on the other, and the database enforces it.' },
-  { id: 'knot', label: 'Any combination', swatch: '', what: 'Two kinds of records paired freely through a linking table.' },
-  { id: 'loose', label: 'Loose link', swatch: 'dash', what: 'The app writes a reference, but the database never checks it.' },
-  { id: 'policy', label: 'Access rule checks', swatch: 'dot', what: 'An access rule on one table looks at the other to decide who may see or change rows.' },
-  { id: 'auto', label: 'Automatic action writes', swatch: 'dash', what: 'When a record on one end changes, something runs on its own and writes to the other.' },
+  { id: 'fk', label: 'Belongs to', dash: '', what: 'Each record on one end belongs to one record on the other, the way a location belongs to a client. The database enforces it, so the link can never point at something that does not exist.' },
+  { id: 'knot', label: 'Any combination', dash: '', what: 'Two kinds of records can be paired freely, like staff and the sites they are assigned to. A small linking table stores each pairing.' },
+  { id: 'loose', label: 'Loose link', dash: '5 4', what: 'One record names another by its ID, but nothing checks that the other record exists. If it is deleted, this one keeps pointing at nothing.' },
+  { id: 'policy', label: 'Access rule checks', dash: '2 4', what: 'To decide who may see or change a row here, a security rule looks at rows in the other table. For example: “may this person see this client? Check which sites they are assigned to.”' },
+  { id: 'auto', label: 'Automatic action writes', dash: '10 5', what: 'When a record here is added or changed, something runs on its own and writes to the other table, such as an audit entry being recorded.' },
 ];
 const kindOf = (l) => l.kind === 'inferred' ? 'loose' : l.kind === 'junction' ? 'knot' : l.kind === 'policy' ? 'policy' : l.kind === 'trigger' ? 'auto' : 'fk';
 const kindLabel = (k) => (KINDS.find((x) => x.id === k) || {}).label || k;
 state.filter = new Set();
+const swatch = (k) => { const svg = el('svg', { viewBox: '0 0 30 8', class: 'sw' }); svg.append(el('line', { x1: 1, y1: 4, x2: 29, y2: 4, 'stroke-dasharray': k.dash || 'none', 'stroke-linecap': k.dash === '2 4' ? 'round' : 'butt' })); return svg; };
 function renderFilters() {
   const bar = $('#filters'); bar.innerHTML = '';
-  bar.append(h('span', { class: 'lbl' }, 'Highlight:'));
+  if (state.filtersCollapsed === undefined) state.filtersCollapsed = !!store.load('wt-filters').collapsed;
+  const collapsed = state.filtersCollapsed;
+  bar.classList.toggle('collapsed', collapsed);
   const counts = new Map();
   for (const e of current.edges) { if (e.k === 'group') { for (const [k, n] of Object.entries(e.kinds || {})) counts.set(k, (counts.get(k) || 0) + n); } else counts.set(e.k, (counts.get(e.k) || 0) + 1); }
+  const head = h('div', { class: 'fhead' }, h('span', { class: 'lbl' }, collapsed ? 'Highlight:' : 'What the lines mean'),
+    h('button', { class: 'collapse', title: collapsed ? 'Show what each kind of line means' : 'Collapse to a single row', onclick: () => { state.filtersCollapsed = !collapsed; store.save('wt-filters', { collapsed: !collapsed }); renderFilters(); } }, collapsed ? 'Explain' : 'Collapse'));
+  bar.append(head);
+  if (!collapsed) bar.append(h('p', { class: 'fintro' }, 'Every line on the map is one of these. Click a kind to make those lines bold and fade the rest; click again to turn it off.'));
+  const list = h('div', { class: 'flist' });
   for (const k of KINDS) {
     const n = counts.get(k.id) || 0;
-    const b = h('button', { class: 'chip', 'aria-pressed': String(state.filter.has(k.id)), title: k.what, onclick: () => { if (state.filter.has(k.id)) state.filter.delete(k.id); else state.filter.add(k.id); renderFilters(); applyHighlight(); } }, h('i', { class: k.swatch }), k.label, h('span', { class: 'count' }, String(n)));
+    const b = h('button', { class: 'chip', 'aria-pressed': String(state.filter.has(k.id)), title: k.what, onclick: () => { if (state.filter.has(k.id)) state.filter.delete(k.id); else state.filter.add(k.id); renderFilters(); applyHighlight(); } },
+      swatch(k), h('span', { class: 'name' }, k.label), h('span', { class: 'count' }, n ? `${n} on this map` : 'none here'));
+    if (!collapsed) b.append(h('small', {}, k.what));
     b.style.setProperty('--kc', `var(--c-${k.id})`);
-    if (!n) b.disabled = true, b.style.opacity = .45;
-    bar.append(b);
+    if (!n) { b.disabled = true; b.classList.add('none'); }
+    list.append(b);
   }
-  if (state.filter.size) bar.append(h('button', { class: 'clear', onclick: () => { state.filter.clear(); renderFilters(); applyHighlight(); } }, 'Clear'));
+  bar.append(list);
+  if (state.filter.size) bar.append(h('button', { class: 'clear', onclick: () => { state.filter.clear(); renderFilters(); applyHighlight(); } }, 'Clear highlight'));
 }
 
 // ---- map rendering
