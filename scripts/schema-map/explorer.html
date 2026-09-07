@@ -50,8 +50,18 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
 .view { display: none; min-height: 0; }
 .view.active { display: grid; }
 #view-map { grid-template-columns: 250px minmax(0, 1fr) 360px; }
-#view-map.focus { grid-template-columns: minmax(0, 1fr); }
-#view-map.focus .rail, #view-map.focus .panel { display: none; }
+#view-map.no-rail { grid-template-columns: minmax(0, 1fr) 360px; }
+#view-map.no-panel { grid-template-columns: 250px minmax(0, 1fr); }
+#view-map.no-rail.no-panel { grid-template-columns: minmax(0, 1fr); }
+#view-map.no-rail .rail, #view-map.no-panel .panel { display: none; }
+.edge-toggle { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; background: var(--surface-2); color: var(--muted); border: 1px solid transparent; }
+.edge-toggle:hover { color: var(--ink); border-color: var(--line-strong); }
+.edge-toggle[hidden] { display: none; }
+.edge-toggle svg { width: 16px; height: 16px; display: block; }
+.edge-toggle rect { fill: none; stroke: currentColor; stroke-width: 1.6; }
+.edge-toggle line { stroke: currentColor; stroke-width: 1.6; }
+.edge-toggle .pane { fill: currentColor; opacity: .35; stroke: none; }
+.edge-toggle[aria-pressed="true"] .pane { opacity: 0; }
 #view-flows { grid-template-columns: 280px minmax(0, 1fr); }
 #view-words { grid-template-columns: minmax(0, 1fr); overflow: auto; }
 
@@ -75,7 +85,7 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
 .crumbs button { color: var(--accent-ink); font-weight: 600; }
 .crumbs span.sep { color: var(--muted); }
 .crumbs .here { font-weight: 600; }
-.canvas .hint { position: absolute; bottom: 12px; left: 14px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--surface) 88%, transparent); padding: 5px 10px; border-radius: 999px; }
+.canvas .hint { position: absolute; bottom: 10px; left: 14px; right: 14px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--surface) 88%, transparent); padding: 5px 10px; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .canvas .tools { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; z-index: 2; }
 .canvas .tools button { background: var(--surface); box-shadow: var(--shadow); padding: 6px 10px; border-radius: 8px; font-size: 12px; font-family: var(--font-display); font-weight: 600; color: var(--muted); }
 .canvas .tools button[aria-pressed="true"] { color: var(--accent-ink); }
@@ -101,7 +111,7 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; li
 .dim { opacity: .18; }
 .faded { opacity: .12; }
 /* filter bar */
-.filters { position: absolute; bottom: 12px; right: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; max-width: 70%; background: color-mix(in srgb, var(--surface) 92%, transparent); padding: 6px 8px; border-radius: 10px; box-shadow: var(--shadow); font-size: 12px; z-index: 2; }
+.filters { position: absolute; bottom: 44px; right: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; max-width: 70%; background: color-mix(in srgb, var(--surface) 92%, transparent); padding: 6px 8px; border-radius: 10px; box-shadow: var(--shadow); font-size: 12px; z-index: 2; }
 .filters .lbl { color: var(--muted); font-family: var(--font-display); font-weight: 600; margin-right: 2px; }
 .filters button.chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 600; font-family: var(--font-display); }
 .filters button.chip[aria-pressed="true"] { border-color: var(--kc); background: color-mix(in srgb, var(--kc) 16%, var(--surface)); box-shadow: inset 0 0 0 1px var(--kc); }
@@ -201,8 +211,8 @@ svg .bg { fill: transparent; }
 
 @media (max-width: 980px) {
   .app { height: auto; min-height: 100vh; }
-  #view-map { grid-template-columns: 1fr; grid-template-rows: auto 60vh auto; }
-  #view-map.focus { grid-template-rows: 80vh; }
+  #view-map, #view-map.no-rail, #view-map.no-panel, #view-map.no-rail.no-panel { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-rows: auto; }
+  #view-map .canvas { min-height: 60vh; }
   #view-flows { grid-template-columns: 1fr; }
   .rail { border-right: 0; border-bottom: 1px solid var(--line); max-height: 220px; }
   .panel { border-left: 0; border-top: 1px solid var(--line); }
@@ -216,12 +226,14 @@ svg .bg { fill: transparent; }
 
 <div class="app">
   <header class="topbar">
+    <button class="edge-toggle left" id="toggle-rail" aria-pressed="false" title="Hide or show the list of groups and tables" aria-label="Toggle the table list"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2.5"/><rect class="pane" x="1.5" y="2.5" width="5" height="11" rx="2.5"/><line x1="6.5" y1="2.5" x2="6.5" y2="13.5"/></svg></button>
     <h1>__TITLE__<small>__SUBTITLE__</small></h1>
     <nav class="tabs" role="tablist">
       <button role="tab" aria-selected="true" data-view="map">Map</button>
       <button role="tab" aria-selected="false" data-view="flows">What happens when…</button>
       <button role="tab" aria-selected="false" data-view="words">Words &amp; legend</button>
     </nav>
+    <button class="edge-toggle right" id="toggle-panel" aria-pressed="false" title="Hide or show the details panel" aria-label="Toggle the details panel"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2.5"/><rect class="pane" x="9.5" y="2.5" width="5" height="11" rx="2.5"/><line x1="9.5" y1="2.5" x2="9.5" y2="13.5"/></svg></button>
   </header>
 
   <section id="view-map" class="view active">
@@ -231,7 +243,7 @@ svg .bg { fill: transparent; }
     </aside>
     <div class="canvas" id="canvas">
       <div class="crumbs" id="crumbs"></div>
-      <div class="tools"><button id="btn-focus" aria-pressed="false" title="Hide the side panels so the map gets the whole window">Hide panels</button><button id="btn-tidy" title="Forget the positions you dragged and lay this view out again with as few crossing lines as possible">Tidy up</button><button id="btn-all" aria-pressed="false">Show every table</button></div>
+      <div class="tools"><button id="btn-tidy" title="Forget the positions you dragged and lay this view out again with as few crossing lines as possible">Tidy up</button><button id="btn-all" aria-pressed="false">Show every table</button></div>
       <div class="hint">Drag a box to move it, drag the empty background to move around, scroll to zoom, double-click the background to fit everything on screen. Your arrangement is remembered on this device.</div>
       <svg id="svg" role="img" aria-label="Map of database tables and their connections"></svg>
       <div class="filters" id="filters" aria-label="Highlight connection types"></div>
@@ -745,13 +757,16 @@ function render() {
   $('#btn-all').setAttribute('aria-pressed', String(state.level === 'all'));
 }
 $('#btn-tidy').addEventListener('click', () => { store.clear(store.key()); state.refit = true; render(); });
-function setFocus(on) {
-  $('#view-map').classList.toggle('focus', on);
-  const b = $('#btn-focus'); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Show panels' : 'Hide panels';
-  store.save('wt-focus', { on });
+function setPanels(p) {
+  const view = $('#view-map');
+  view.classList.toggle('no-rail', !!p.rail); view.classList.toggle('no-panel', !!p.panel);
+  $('#toggle-rail').setAttribute('aria-pressed', String(!!p.rail)); $('#toggle-panel').setAttribute('aria-pressed', String(!!p.panel));
+  store.save('wt-panels', p);
 }
-$('#btn-focus').addEventListener('click', () => { setFocus(!$('#view-map').classList.contains('focus')); state.refit = true; render(); });
-if (store.load('wt-focus').on) setFocus(true);
+const panelsHidden = () => ({ rail: $('#view-map').classList.contains('no-rail'), panel: $('#view-map').classList.contains('no-panel') });
+$('#toggle-rail').addEventListener('click', () => { const p = panelsHidden(); setPanels({ ...p, rail: !p.rail }); state.refit = true; render(); });
+$('#toggle-panel').addEventListener('click', () => { const p = panelsHidden(); setPanels({ ...p, panel: !p.panel }); state.refit = true; render(); });
+setPanels(store.load('wt-panels'));
 function applyHighlight() {
   const sel = state.selected;
   const neigh = new Set();
@@ -951,6 +966,7 @@ function showView(v) {
   state.view = v;
   for (const b of document.querySelectorAll('.tabs button')) b.setAttribute('aria-selected', String(b.dataset.view === v));
   for (const s of document.querySelectorAll('.view')) s.classList.toggle('active', s.id === `view-${v}`);
+  for (const b of document.querySelectorAll('.edge-toggle')) b.hidden = v !== 'map';
   if (v === 'map') render(); if (v === 'flows') renderFlows(); if (v === 'words') renderWords();
 }
 for (const b of document.querySelectorAll('.tabs button')) b.addEventListener('click', () => showView(b.dataset.view));
