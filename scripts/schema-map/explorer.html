@@ -370,17 +370,29 @@ function ringLayout(nodes, edges, W, H) {
   return pos;
 }
 
+/** Screen point -> the local coordinates of an SVG element (accounts for viewBox scaling, letterboxing, pan and zoom). */
+function toLocal(node, clientX, clientY) {
+  const m = node && node.getScreenCTM && node.getScreenCTM(); if (!m) return null;
+  return new DOMPoint(clientX, clientY).matrixTransform(m.inverse());
+}
+
 // ---- drag: move a box, keep the lines attached, remember where it went
 function draggable(g, id, pos, svgEl, { onMove, onClick, onDrop }) {
   let start = null, moved = false;
-  g.addEventListener('pointerdown', (ev) => { if (ev.button !== 0) return; const p = pos.get(id); start = { x: ev.clientX, y: ev.clientY, px: p.x, py: p.y }; moved = false; g.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+  g.addEventListener('pointerdown', (ev) => {
+    if (ev.button !== 0) return;
+    const p = pos.get(id); const at = toLocal(g.parentNode, ev.clientX, ev.clientY); if (!at) return;
+    start = { x: ev.clientX, y: ev.clientY, lx: at.x, ly: at.y, px: p.x, py: p.y }; moved = false;
+    try { g.setPointerCapture(ev.pointerId); } catch { /* pointer already gone */ } ev.preventDefault();
+  });
   g.addEventListener('pointermove', (ev) => {
     if (!start) return;
-    const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
-    if (!moved && Math.hypot(dx, dy) < 4) return;
+    if (!moved && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < 4) return;
     if (!moved) { moved = true; g.classList.add('dragging'); hideTip(); }
-    const vb = svgEl.viewBox.baseVal; const scale = vb.width / svgEl.clientWidth / ((svgEl.__view && svgEl.__view.k) || 1);
-    const p = pos.get(id); p.x = start.px + dx * scale; p.y = start.py + dy * scale;
+    // Map the pointer into the boxes' own coordinates, so the box stays exactly under the cursor
+    // whatever the zoom, pan, or the canvas's shape on screen.
+    const at = toLocal(g.parentNode, ev.clientX, ev.clientY); if (!at) return;
+    const p = pos.get(id); p.x = start.px + (at.x - start.lx); p.y = start.py + (at.y - start.ly);
     onMove();
   });
   const finish = (ev) => { if (!start) return; try { g.releasePointerCapture(ev.pointerId); } catch { /* ignore */ } g.classList.remove('dragging'); if (moved) onDrop(); else onClick(); start = null; };
@@ -395,26 +407,26 @@ function installPanZoom(svgEl) {
   svgEl.__panInstalled = true;
   svgEl.classList.add('pannable');
   const v = svgEl.__view;
-  const unit = () => svgEl.viewBox.baseVal.width / svgEl.clientWidth; // viewBox units per screen pixel
   let start = null;
   svgEl.addEventListener('pointerdown', (ev) => {
     if (ev.button !== 0) return;
     if (ev.target.closest && ev.target.closest('.node, .link.hit')) return; // boxes and lines have their own handlers
-    start = { x: ev.clientX, y: ev.clientY, vx: v.x, vy: v.y };
-    svgEl.setPointerCapture(ev.pointerId); svgEl.classList.add('panning'); hideTip(); ev.preventDefault();
+    const at = toLocal(svgEl, ev.clientX, ev.clientY); if (!at) return;
+    start = { lx: at.x, ly: at.y, vx: v.x, vy: v.y };
+    try { svgEl.setPointerCapture(ev.pointerId); } catch { /* pointer already gone */ } svgEl.classList.add('panning'); hideTip(); ev.preventDefault();
   });
   svgEl.addEventListener('pointermove', (ev) => {
     if (!start) return;
-    const u = unit();
-    v.x = start.vx + (ev.clientX - start.x) * u; v.y = start.vy + (ev.clientY - start.y) * u;
+    const at = toLocal(svgEl, ev.clientX, ev.clientY); if (!at) return;
+    v.x = start.vx + (at.x - start.lx); v.y = start.vy + (at.y - start.ly);
     applyView(svgEl);
   });
   const end = (ev) => { if (!start) return; start = null; svgEl.classList.remove('panning'); try { svgEl.releasePointerCapture(ev.pointerId); } catch { /* ignore */ } };
   svgEl.addEventListener('pointerup', end); svgEl.addEventListener('pointercancel', end);
   svgEl.addEventListener('wheel', (ev) => {
     ev.preventDefault();
-    const u = unit(); const r = svgEl.getBoundingClientRect();
-    const mx = (ev.clientX - r.left) * u, my = (ev.clientY - r.top) * u; // cursor in viewBox units
+    const at = toLocal(svgEl, ev.clientX, ev.clientY); if (!at) return;
+    const mx = at.x, my = at.y; // cursor in viewBox units
     const factor = Math.exp(-(ev.deltaMode === 1 ? ev.deltaY * 20 : ev.deltaY) * (ev.ctrlKey ? 0.01 : 0.0015));
     const k2 = Math.max(0.2, Math.min(3, v.k * factor));
     // keep the point under the cursor fixed
